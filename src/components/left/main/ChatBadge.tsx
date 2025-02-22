@@ -104,6 +104,7 @@ const ChatBadge: FC<OwnProps> = ({
       botId: chat.id,
       peerId: chat.id,
       theme,
+      shouldMarkBotTrusted: true,
     });
   });
 

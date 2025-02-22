@@ -42,7 +42,6 @@ export type OwnProps = {
   dialogRef?: React.RefObject<HTMLDivElement>;
   isLowStackPriority?: boolean;
   dialogContent?: React.ReactNode;
-  ignoreFreeze?: boolean;
   onClose: () => void;
   onCloseAnimationEnd?: () => void;
   onEnter?: () => void;

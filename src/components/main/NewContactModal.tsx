@@ -157,13 +157,12 @@ const NewContactModal: FC<OwnProps & StateProps> = ({
           )}
         </p>
         <Checkbox
-          className="dialog-checkbox"
           checked={shouldSharePhoneNumber}
           tabIndex={0}
           onCheck={setShouldSharePhoneNumber}
           label={lang('lng_new_contact_share')}
         />
-        <p className="NewContactModal__help-text NewContactModal__help-text__negative">
+        <p className="NewContactModal__help-text">
           {renderText(lang('AddContact.SharedContactExceptionInfo', renderingUser?.firstName))}
         </p>
       </>

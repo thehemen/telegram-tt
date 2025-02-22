@@ -10,9 +10,8 @@ import type {
 import { NewChatMembersProgress } from '../../types';
 
 import {
-  isChatChannel, isUserBot,
+  filterUsersByName, isChatChannel, isUserBot,
 } from '../../global/helpers';
-import { filterPeersByQuery } from '../../global/helpers/peers';
 import { selectChat, selectChatFullInfo, selectTabState } from '../../global/selectors';
 import { unique } from '../../util/iteratees';
 import sortChatIds from '../common/helpers/sortChatIds';
@@ -84,18 +83,14 @@ const AddChatMembers: FC<OwnProps & StateProps> = ({
   const displayedIds = useMemo(() => {
     // No need for expensive global updates on users, so we avoid them
     const usersById = getGlobal().users.byId;
-    const filteredIds = filterPeersByQuery({
-      ids: unique([
-        ...(localContactIds || []),
-        ...(localUserIds || []),
-        ...(globalUserIds || []),
-      ]),
-      query: searchQuery,
-      type: 'user',
-    });
+    const filteredContactIds = localContactIds ? filterUsersByName(localContactIds, usersById, searchQuery) : [];
 
     return sortChatIds(
-      filteredIds.filter((userId) => {
+      unique([
+        ...filteredContactIds,
+        ...(localUserIds || []),
+        ...(globalUserIds || []),
+      ]).filter((userId) => {
         const user = usersById[userId];
 
         // The user can be added to the chat if the following conditions are met:

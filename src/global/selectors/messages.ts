@@ -410,13 +410,18 @@ export function selectSender<T extends GlobalState>(global: T, message: ApiMessa
 
 export function getSendersFromSelectedMessages<T extends GlobalState>(
   global: T,
-  chatId: string,
-  messageIds: number[],
+  chat: ApiChat | undefined,
+  ...[tabId = getCurrentTabId()]: TabArgs<T>
 ) {
-  return messageIds.map((id) => {
-    const message = selectChatMessage(global, chatId, id);
+  const { messageIds: selectedMessageIds } = selectTabState(global, tabId).selectedMessages || {};
+  if (!chat?.id || !selectedMessageIds) {
+    return undefined;
+  }
+
+  return selectedMessageIds.map((id) => {
+    const message = selectChatMessage(global, chat.id, id);
     return message && selectSender(global, message);
-  }).filter(Boolean);
+  });
 }
 
 export function selectSenderFromMessage<T extends GlobalState>(
@@ -777,19 +782,21 @@ export function selectAllowedMessageActionsSlow<T extends GlobalState>(
   };
 }
 
-export function selectCanDeleteMessages<T extends GlobalState>(
+// This selector always returns a new object which can not be safely used in shallow-equal checks
+export function selectCanDeleteSelectedMessages<T extends GlobalState>(
   global: T,
-  chatId: string,
-  threadId: ThreadId,
-  messageIds: number[],
+  ...[tabId = getCurrentTabId()]: TabArgs<T>
 ) {
-  const chatMessages = selectChatMessages(global, chatId);
-
-  if (messageIds.length > API_GENERAL_ID_LIMIT) {
+  const { messageIds: selectedMessageIds } = selectTabState(global, tabId).selectedMessages || {};
+  const { chatId, threadId } = selectCurrentMessageList(global, tabId) || {};
+  const chatMessages = chatId && selectChatMessages(global, chatId);
+  if (!chatMessages || !selectedMessageIds || !threadId) {
     return {};
   }
 
-  const messageActions = messageIds
+  if (selectedMessageIds.length > API_GENERAL_ID_LIMIT) return {};
+
+  const messageActions = selectedMessageIds
     .map((id) => chatMessages[id] && selectAllowedMessageActionsSlow(global, chatMessages[id], threadId))
     .filter(Boolean);
 
@@ -797,21 +804,6 @@ export function selectCanDeleteMessages<T extends GlobalState>(
     canDelete: messageActions.every((actions) => actions.canDelete),
     canDeleteForAll: messageActions.every((actions) => actions.canDeleteForAll),
   };
-}
-
-export function selectCanDeleteSelectedMessages<T extends GlobalState>(
-  global: T,
-  messageIds?: number[],
-  ...[tabId = getCurrentTabId()]: TabArgs<T>
-) {
-  const { messageIds: selectedMessageIds } = selectTabState(global, tabId).selectedMessages || {};
-  const { chatId, threadId } = selectCurrentMessageList(global, tabId) || {};
-  const messageIdList = messageIds?.length ? messageIds : selectedMessageIds;
-  if (!chatId || !threadId || !messageIdList) {
-    return {};
-  }
-
-  return selectCanDeleteMessages(global, chatId, threadId, messageIdList);
 }
 
 export function selectCanReportSelectedMessages<T extends GlobalState>(

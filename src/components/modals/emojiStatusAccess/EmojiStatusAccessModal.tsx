@@ -70,7 +70,6 @@ const EmojiStatusAccessModal: FC<OwnProps & StateProps> = ({
     return {
       ...currentUser,
       emojiStatus: {
-        type: 'regular',
         documentId: stickerSet.stickers[currentStatusIndex].id,
       },
     } satisfies ApiUser;

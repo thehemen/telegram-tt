@@ -7,8 +7,7 @@ import { getActions, withGlobal } from '../../../global';
 
 import type { ApiUser } from '../../../api/types';
 
-import { getUserFullName } from '../../../global/helpers';
-import { filterPeersByQuery } from '../../../global/helpers/peers';
+import { filterUsersByName, getUserFullName } from '../../../global/helpers';
 import { selectTabState } from '../../../global/selectors';
 import { unique } from '../../../util/iteratees';
 
@@ -58,7 +57,7 @@ const BlockUserModal: FC<OwnProps & StateProps> = ({
       return contactId !== currentUserId && !blockedIds.includes(contactId);
     }));
 
-    return filterPeersByQuery({ ids: availableContactIds, query: search, type: 'user' })
+    return filterUsersByName(availableContactIds, usersById, search)
       .sort((firstId, secondId) => {
         const firstName = getUserFullName(usersById[firstId]) || '';
         const secondName = getUserFullName(usersById[secondId]) || '';

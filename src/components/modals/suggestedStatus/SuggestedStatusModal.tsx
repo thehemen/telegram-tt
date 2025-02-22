@@ -45,7 +45,6 @@ const SuggestedStatusModal = ({ modal, currentUser, bot }: OwnProps & StateProps
     return {
       ...currentUser,
       emojiStatus: {
-        type: 'regular',
         documentId: renderingModal.customEmojiId,
       },
     } satisfies ApiUser;
@@ -94,7 +93,8 @@ const SuggestedStatusModal = ({ modal, currentUser, bot }: OwnProps & StateProps
 
     setEmojiStatus({
       referrerWebAppKey: renderingModal.webAppKey,
-      emojiStatus: { type: 'regular', documentId: renderingModal.customEmojiId, until: expires },
+      emojiStatusId: renderingModal.customEmojiId,
+      expires,
     });
     closeSuggestedStatusModal();
   });

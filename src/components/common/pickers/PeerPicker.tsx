@@ -31,18 +31,18 @@ import PickerItem from './PickerItem';
 
 import styles from './PickerStyles.module.scss';
 
-type SingleModeProps<CategoryType extends string> = {
+type SingleModeProps = {
   allowMultiple?: false;
   itemInputType?: 'radio';
   selectedId?: string;
   selectedIds?: never; // Help TS to throw an error if this is passed
-  selectedCategory?: CategoryType;
+  selectedCategory?: CustomPeerType;
   selectedCategories?: never;
-  onSelectedCategoryChange?: (category: CategoryType) => void;
+  onSelectedCategoryChange?: (category: CustomPeerType) => void;
   onSelectedIdChange?: (id: string) => void;
 };
 
-type MultipleModeProps<CategoryType extends string> = {
+type MultipleModeProps = {
   allowMultiple: true;
   itemInputType: 'checkbox';
   selectedId?: never;
@@ -50,14 +50,14 @@ type MultipleModeProps<CategoryType extends string> = {
   lockedSelectedIds?: string[];
   lockedUnselectedIds?: string[];
   selectedCategory?: never;
-  selectedCategories?: CategoryType[];
-  onSelectedCategoriesChange?: (categories: CategoryType[]) => void;
+  selectedCategories?: CustomPeerType[];
+  onSelectedCategoriesChange?: (categories: CustomPeerType[]) => void;
   onSelectedIdsChange?: (Ids: string[]) => void;
 };
 
-type OwnProps<CategoryType extends string> = {
+type OwnProps = {
   className?: string;
-  categories?: UniqueCustomPeer<CategoryType>[];
+  categories?: UniqueCustomPeer[];
   itemIds: string[];
   lockedUnselectedSubtitle?: string;
   filterValue?: string;
@@ -73,12 +73,11 @@ type OwnProps<CategoryType extends string> = {
   isViewOnly?: boolean;
   withStatus?: boolean;
   withPeerTypes?: boolean;
-  withPeerUsernames?: boolean;
   withDefaultPadding?: boolean;
   onFilterChange?: (value: string) => void;
   onDisabledClick?: (id: string, isSelected: boolean) => void;
   onLoadMore?: () => void;
-} & (SingleModeProps<CategoryType> | MultipleModeProps<CategoryType>);
+} & (SingleModeProps | MultipleModeProps);
 
 // Focus slows down animation, also it breaks transition layout in Chrome
 const FOCUS_DELAY_MS = 500;
@@ -88,7 +87,7 @@ const ALWAYS_FULL_ITEMS_COUNT = 5;
 
 const ITEM_CLASS_NAME = 'PeerPickerItem';
 
-const PeerPicker = <CategoryType extends string = CustomPeerType>({
+const PeerPicker = ({
   className,
   categories,
   itemIds,
@@ -107,13 +106,12 @@ const PeerPicker = <CategoryType extends string = CustomPeerType>({
   itemInputType,
   withStatus,
   withPeerTypes,
-  withPeerUsernames,
   withDefaultPadding,
   onFilterChange,
   onDisabledClick,
   onLoadMore,
   ...optionalProps
-}: OwnProps<CategoryType>) => {
+}: OwnProps) => {
   const lang = useOldLang();
 
   const allowMultiple = optionalProps.allowMultiple;
@@ -270,16 +268,7 @@ const PeerPicker = <CategoryType extends string = CustomPeerType>({
 
     function getSubtitle() {
       if (isAlwaysUnselected) return [lockedUnselectedSubtitle];
-      if (!peer) return undefined;
-
-      if (withPeerUsernames) {
-        const username = peer.usernames?.[0]?.username;
-        if (username) {
-          return [`@${username}`];
-        }
-      }
-
-      if (withStatus) {
+      if (withStatus && peer) {
         if (isApiPeerChat(peer)) {
           return [getGroupStatus(lang, peer)];
         }
@@ -290,12 +279,10 @@ const PeerPicker = <CategoryType extends string = CustomPeerType>({
           buildClassName(isUserOnline(peer, userStatus, true) && styles.onlineStatus),
         ];
       }
-
-      if (withPeerTypes) {
+      if (withPeerTypes && peer) {
         const langKey = getPeerTypeKey(peer);
         return langKey && [lang(langKey)];
       }
-
       return undefined;
     }
 
@@ -329,7 +316,7 @@ const PeerPicker = <CategoryType extends string = CustomPeerType>({
   }, [
     categoriesByType, forceShowSelf, isViewOnly, itemClassName, itemInputType, lang, lockedSelectedIdsSet,
     lockedUnselectedIdsSet, lockedUnselectedSubtitle, onDisabledClick, selectedCategories, selectedIds,
-    withPeerTypes, withStatus, withPeerUsernames,
+    withPeerTypes, withStatus,
   ]);
 
   const beforeChildren = useMemo(() => {

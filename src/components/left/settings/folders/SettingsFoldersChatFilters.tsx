@@ -2,12 +2,12 @@ import type { FC } from '../../../../lib/teact/teact';
 import React, {
   memo, useEffect, useMemo, useState,
 } from '../../../../lib/teact/teact';
-import { getActions, withGlobal } from '../../../../global';
+import { getActions, getGlobal, withGlobal } from '../../../../global';
 
 import type { FolderEditDispatch, FoldersState } from '../../../../hooks/reducers/useFoldersReducer';
 
 import { ALL_FOLDER_ID, ARCHIVED_FOLDER_ID } from '../../../../config';
-import { filterPeersByQuery } from '../../../../global/helpers/peers';
+import { filterChatsByName } from '../../../../global/helpers';
 import { selectCurrentLimit } from '../../../../global/selectors/limits';
 import { unique } from '../../../../util/iteratees';
 import { CUSTOM_PEER_EXCLUDED_CHAT_TYPES, CUSTOM_PEER_INCLUDED_CHAT_TYPES } from '../../../../util/objects/customPeer';
@@ -67,11 +67,14 @@ const SettingsFoldersChatFilters: FC<OwnProps & StateProps> = ({
   }, [isActive]);
 
   const displayedIds = useMemo(() => {
+    // No need for expensive global updates on chats, so we avoid them
+    const chatsById = getGlobal().chats.byId;
+
     const chatIds = [...folderAllOrderedIds || [], ...folderArchivedOrderedIds || []];
     return unique([
-      ...filterPeersByQuery({ ids: chatIds, query: chatFilter, type: 'chat' }),
+      ...filterChatsByName(lang, chatIds, chatsById, chatFilter),
     ]);
-  }, [folderAllOrderedIds, folderArchivedOrderedIds, chatFilter]);
+  }, [folderAllOrderedIds, folderArchivedOrderedIds, lang, chatFilter]);
 
   const handleFilterChange = useLastCallback((newFilter: string) => {
     dispatch({

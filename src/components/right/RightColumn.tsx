@@ -313,7 +313,6 @@ const RightColumn: FC<OwnProps & StateProps> = ({
             threadId={threadId}
             profileState={profileState}
             isMobile={isMobile}
-            isActive={isOpen && isActive}
             onProfileStateChange={setProfileState}
           />
         );

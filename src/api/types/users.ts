@@ -28,7 +28,7 @@ export interface ApiUser {
   canBeInvitedToGroup?: boolean;
   fakeType?: ApiFakeType;
   isAttachBot?: boolean;
-  emojiStatus?: ApiEmojiStatusType;
+  emojiStatus?: ApiEmojiStatus;
   areStoriesHidden?: boolean;
   hasStories?: boolean;
   hasUnreadStories?: boolean;
@@ -132,25 +132,8 @@ export interface ApiPremiumGiftOption {
   botUrl: string;
 }
 
-export type ApiEmojiStatusType = ApiEmojiStatus | ApiEmojiStatusCollectible;
-
 export interface ApiEmojiStatus {
-  type: 'regular';
   documentId: string;
-  until?: number;
-}
-
-export interface ApiEmojiStatusCollectible {
-  type: 'collectible';
-  collectibleId: string;
-  documentId: string;
-  title: string;
-  slug: string;
-  patternDocumentId: string;
-  centerColor: string;
-  edgeColor: string;
-  patternColor: string;
-  textColor: string;
   until?: number;
 }
 

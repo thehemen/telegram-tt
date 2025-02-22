@@ -5,7 +5,6 @@ import { NewChatMembersProgress } from '../types';
 import {
   ANIMATION_LEVEL_DEFAULT,
   DARK_THEME_PATTERN_COLOR,
-  DEFAULT_GIFT_PROFILE_FILTER_OPTIONS,
   DEFAULT_MESSAGE_TEXT_SIZE_PX,
   DEFAULT_PATTERN_COLOR,
   DEFAULT_PLAYBACK_RATE,
@@ -107,6 +106,7 @@ export const INITIAL_GLOBAL_STATE: GlobalState = {
   },
 
   peers: {
+    giftsById: {},
     profilePhotosById: {},
   },
 
@@ -363,13 +363,6 @@ export const INITIAL_TAB_STATE: TabState = {
 
   management: {
     byChatId: {},
-  },
-
-  savedGifts: {
-    filter: {
-      ...DEFAULT_GIFT_PROFILE_FILTER_OPTIONS,
-    },
-    giftsByPeerId: {},
   },
 
   storyViewer: {

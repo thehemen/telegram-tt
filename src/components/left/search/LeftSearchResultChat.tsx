@@ -91,6 +91,7 @@ const LeftSearchResultChat: FC<OwnProps & StateProps> = ({
       botId: chatId,
       peerId: chatId,
       theme,
+      shouldMarkBotTrusted: true,
     });
   });
 

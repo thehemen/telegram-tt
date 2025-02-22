@@ -2,9 +2,6 @@ import BigInt from 'big-integer';
 import { Api as GramJs } from '../../../lib/gramjs';
 
 import type {
-  GiftProfileFilterOptions,
-} from '../../../types';
-import type {
   ApiChat,
   ApiInputStorePaymentPurpose,
   ApiPeer,
@@ -454,30 +451,16 @@ export async function fetchSavedStarGifts({
   peer,
   offset = '',
   limit,
-  filter,
 }: {
   peer: ApiPeer;
   offset?: string;
   limit?: number;
-  filter?: GiftProfileFilterOptions;
 }) {
-  type GetSavedStarGiftsParams = ConstructorParameters<typeof GramJs.payments.GetSavedStarGifts>[0];
-
-  const params : GetSavedStarGiftsParams = {
+  const result = await invokeRequest(new GramJs.payments.GetSavedStarGifts({
     peer: buildInputPeer(peer.id, peer.accessHash),
     offset,
     limit,
-    ...(filter && {
-      sortByValue: filter.sortType === 'byValue' || undefined,
-      excludeUnlimited: !filter.shouldIncludeUnlimited || undefined,
-      excludeLimited: !filter.shouldIncludeLimited || undefined,
-      excludeUnique: !filter.shouldIncludeUnique || undefined,
-      excludeSaved: !filter.shouldIncludeDisplayed || undefined,
-      excludeUnsaved: !filter.shouldIncludeHidden || undefined,
-    } satisfies GetSavedStarGiftsParams),
-  };
-
-  const result = await invokeRequest(new GramJs.payments.GetSavedStarGifts(params));
+  }));
 
   if (!result) {
     return undefined;
@@ -694,7 +677,7 @@ export async function fetchStarGiftUpgradePreview({
   return result.sampleAttributes.map(buildApiStarGiftAttribute).filter(Boolean);
 }
 
-export function upgradeStarGift({
+export function upgradeGift({
   inputSavedGift,
   shouldKeepOriginalDetails,
 }: {
@@ -704,21 +687,6 @@ export function upgradeStarGift({
   return invokeRequest(new GramJs.payments.UpgradeStarGift({
     stargift: buildInputSavedStarGift(inputSavedGift),
     keepOriginalDetails: shouldKeepOriginalDetails,
-  }), {
-    shouldReturnTrue: true,
-  });
-}
-
-export function transferStarGift({
-  inputSavedGift,
-  toPeer,
-}: {
-  inputSavedGift: ApiRequestInputSavedStarGift;
-  toPeer: ApiPeer;
-}) {
-  return invokeRequest(new GramJs.payments.TransferStarGift({
-    stargift: buildInputSavedStarGift(inputSavedGift),
-    toId: buildInputPeer(toPeer.id, toPeer.accessHash),
   }), {
     shouldReturnTrue: true,
   });

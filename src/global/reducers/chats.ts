@@ -420,11 +420,12 @@ export function addChatMembers<T extends GlobalState>(global: T, chat: ApiChat, 
   });
 }
 
-export function replaceSimilarChannels<T extends GlobalState>(
+export function addSimilarChannels<T extends GlobalState>(
   global: T,
   chatId: string,
   similarChannelIds: string[],
   count?: number,
+  shouldShowInChat = true,
 ) {
   return {
     ...global,
@@ -435,6 +436,7 @@ export function replaceSimilarChannels<T extends GlobalState>(
         [chatId]: {
           similarChannelIds,
           count: count || similarChannelIds.length,
+          shouldShowInChat,
         },
       },
     },
@@ -455,7 +457,7 @@ export function toggleSimilarChannels<T extends GlobalState>(
         ...global.chats.similarChannelsById,
         [chatId]: {
           ...similarChannels,
-          isExpanded: !similarChannels?.isExpanded,
+          shouldShowInChat: !similarChannels.shouldShowInChat,
         },
       },
     },

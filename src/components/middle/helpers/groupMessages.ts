@@ -21,18 +21,17 @@ export function isAlbum(messageOrAlbum: ApiMessage | IAlbum): messageOrAlbum is 
 export function groupMessages(
   messages: ApiMessage[], firstUnreadId?: number, topMessageId?: number, isChatWithSelf?: boolean,
 ) {
-  const initDateGroup: MessageDateGroup = {
+  let currentSenderGroup: SenderGroup = [];
+  let currentDateGroup = {
     originalDate: messages[0].date,
     datetime: getDayStartAt(messages[0].date * 1000),
-    senderGroups: [[]],
+    senderGroups: [currentSenderGroup],
   };
   let currentAlbum: IAlbum | undefined;
 
-  const dateGroups: MessageDateGroup[] = [initDateGroup];
+  const dateGroups: MessageDateGroup[] = [currentDateGroup];
 
   messages.forEach((message, index) => {
-    const currentDateGroup = dateGroups[dateGroups.length - 1];
-    const currentSenderGroup = currentDateGroup.senderGroups[currentDateGroup.senderGroups.length - 1];
     if (message.isInAlbum) {
       if (!currentAlbum) {
         currentAlbum = {
@@ -77,16 +76,19 @@ export function groupMessages(
       currentAlbum = undefined;
     }
 
-    const lastMessageInSenderGroup = currentSenderGroup[currentSenderGroup.length - 1];
-    if (nextMessage && !currentAlbum) {
+    const lastSenderGroupItem = currentSenderGroup[currentSenderGroup.length - 1];
+    if (nextMessage) {
       const nextMessageDayStartsAt = getDayStartAt(nextMessage.date * 1000);
       if (currentDateGroup.datetime !== nextMessageDayStartsAt) {
-        const newDateGroup: MessageDateGroup = {
+        currentDateGroup = {
           originalDate: nextMessage.date,
           datetime: nextMessageDayStartsAt,
-          senderGroups: [[]],
+          senderGroups: [],
         };
-        dateGroups.push(newDateGroup);
+        dateGroups.push(currentDateGroup);
+
+        currentSenderGroup = [];
+        currentDateGroup.senderGroups.push(currentSenderGroup);
       } else if (
         nextMessage.id === firstUnreadId
         || message.senderId !== nextMessage.senderId
@@ -99,13 +101,13 @@ export function groupMessages(
         || (nextMessage.date - message.date) > GROUP_INTERVAL_SECONDS
         || (topMessageId
           && (message.id === topMessageId
-            || (lastMessageInSenderGroup
-              && 'mainMessage' in lastMessageInSenderGroup
-              && lastMessageInSenderGroup.mainMessage?.id === topMessageId))
+            || (lastSenderGroupItem
+              && 'mainMessage' in lastSenderGroupItem && lastSenderGroupItem.mainMessage?.id === topMessageId))
           && nextMessage.id !== topMessageId)
         || (isChatWithSelf && message.forwardInfo?.fromId !== nextMessage.forwardInfo?.fromId)
       ) {
-        currentDateGroup.senderGroups.push([]);
+        currentSenderGroup = [];
+        currentDateGroup.senderGroups.push(currentSenderGroup);
       }
     }
   });

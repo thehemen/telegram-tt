@@ -15,10 +15,7 @@ import {
 } from '../../reducers';
 import { updateTabState } from '../../reducers/tabs';
 import {
-  selectGiftProfileFilter,
   selectPeer,
-  selectPeerSavedGifts,
-  selectTabState,
 } from '../../selectors';
 
 addActionHandler('loadStarStatus', async (global): Promise<void> => {
@@ -137,48 +134,30 @@ addActionHandler('loadStarGifts', async (global): Promise<void> => {
 });
 
 addActionHandler('loadPeerSavedGifts', async (global, actions, payload): Promise<void> => {
-  const {
-    peerId, shouldRefresh, withTransition, tabId = getCurrentTabId(),
-  } = payload;
+  const { peerId, shouldRefresh } = payload;
 
   const peer = selectPeer(global, peerId);
   if (!peer) return;
 
-  const currentGifts = selectPeerSavedGifts(global, peerId, tabId);
+  const currentGifts = global.peers.giftsById[peerId];
   const localNextOffset = currentGifts?.nextOffset;
 
   if (!shouldRefresh && currentGifts && !localNextOffset) return; // Already loaded all
 
-  global = getGlobal();
-  const fetchingFilter = selectGiftProfileFilter(global, peerId, tabId);
-
   const result = await callApi('fetchSavedStarGifts', {
     peer,
     offset: !shouldRefresh ? localNextOffset : '',
-    filter: fetchingFilter,
   });
 
-  global = getGlobal();
-  const currentFilter = selectGiftProfileFilter(global, peerId, tabId);
-
-  if (!result || currentFilter !== fetchingFilter) {
+  if (!result) {
     return;
   }
 
+  global = getGlobal();
+
   const newGifts = currentGifts && !shouldRefresh ? currentGifts.gifts.concat(result.gifts) : result.gifts;
 
-  const tabState = selectTabState(global, tabId);
-
-  if (withTransition) {
-    global = updateTabState(global, {
-      savedGifts: {
-        ...tabState.savedGifts,
-        transitionKey: (tabState?.savedGifts.transitionKey || 0) + 1,
-      },
-    }, tabId);
-  }
-
-  global = replacePeerSavedGifts(global, peerId, newGifts, result.nextOffset, tabId);
+  global = replacePeerSavedGifts(global, peerId, newGifts, result.nextOffset);
   setGlobal(global);
 });
 
@@ -237,14 +216,14 @@ addActionHandler('fulfillStarsSubscription', async (global, actions, payload): P
 });
 
 addActionHandler('changeGiftVisibility', async (global, actions, payload): Promise<void> => {
-  const { gift, shouldUnsave, tabId = getCurrentTabId() } = payload;
+  const { gift, shouldUnsave } = payload;
 
   const peerId = gift.type === 'user' ? global.currentUserId! : gift.chatId;
 
   const requestInputGift = getRequestInputSavedStarGift(global, gift);
   if (!requestInputGift) return;
 
-  const oldGifts = selectTabState(global, tabId).savedGifts.giftsByPeerId[peerId];
+  const oldGifts = global.peers.giftsById[peerId];
   if (oldGifts?.gifts?.length) {
     const newGifts = oldGifts.gifts.map((g) => {
       if (g.inputGift && areInputSavedGiftsEqual(g.inputGift, gift)) {
@@ -255,7 +234,7 @@ addActionHandler('changeGiftVisibility', async (global, actions, payload): Promi
       }
       return g;
     });
-    global = replacePeerSavedGifts(global, peerId, newGifts, oldGifts.nextOffset, tabId);
+    global = replacePeerSavedGifts(global, peerId, newGifts, oldGifts.nextOffset);
     setGlobal(global);
   }
 
@@ -266,17 +245,13 @@ addActionHandler('changeGiftVisibility', async (global, actions, payload): Promi
   global = getGlobal();
 
   if (!result) {
-    global = replacePeerSavedGifts(global, peerId, oldGifts.gifts, oldGifts.nextOffset, tabId);
+    global = replacePeerSavedGifts(global, peerId, oldGifts.gifts, oldGifts.nextOffset);
     setGlobal(global);
     return;
   }
 
   // Reload gift list to avoid issues with pagination
-  Object.values(global.byTabId).forEach((tabState) => {
-    if (selectPeerSavedGifts(global, peerId, tabId)) {
-      actions.loadPeerSavedGifts({ peerId, shouldRefresh: true, tabId: tabState.id });
-    }
-  });
+  actions.loadPeerSavedGifts({ peerId, shouldRefresh: true });
 });
 
 addActionHandler('convertGiftToStars', async (global, actions, payload): Promise<void> => {
@@ -293,12 +268,7 @@ addActionHandler('convertGiftToStars', async (global, actions, payload): Promise
     return;
   }
 
-  const peerId = gift.type === 'user' ? global.currentUserId! : gift.chatId;
-  Object.values(global.byTabId).forEach((tabState) => {
-    if (selectPeerSavedGifts(global, peerId, tabId)) {
-      actions.loadPeerSavedGifts({ peerId, shouldRefresh: true, tabId: tabState.id });
-    }
-  });
+  actions.loadPeerSavedGifts({ peerId: global.currentUserId!, shouldRefresh: true });
   actions.openStarsBalanceModal({ tabId });
 });
 

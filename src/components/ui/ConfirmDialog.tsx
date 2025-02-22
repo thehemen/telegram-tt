@@ -14,11 +14,10 @@ import Modal from './Modal';
 type OwnProps = {
   isOpen: boolean;
   title?: string;
-  noDefaultTitle?: boolean;
   header?: TeactNode;
   textParts?: TextPart;
   text?: string;
-  confirmLabel?: TeactNode;
+  confirmLabel?: string;
   confirmIsDestructive?: boolean;
   isConfirmDisabled?: boolean;
   isOnlyConfirm?: boolean;
@@ -33,7 +32,6 @@ type OwnProps = {
 const ConfirmDialog: FC<OwnProps> = ({
   isOpen,
   title,
-  noDefaultTitle,
   header,
   text,
   textParts,
@@ -62,7 +60,7 @@ const ConfirmDialog: FC<OwnProps> = ({
   return (
     <Modal
       className={buildClassName('confirm', className)}
-      title={(title || (!noDefaultTitle ? lang('Telegram') : undefined))}
+      title={(title || lang('Telegram'))}
       header={header}
       isOpen={isOpen}
       onClose={onClose}

@@ -298,7 +298,7 @@ addActionHandler('loadPeerStories', async (global, actions, payload): Promise<vo
 addActionHandler('loadPeerProfileStories', async (global, actions, payload): Promise<void> => {
   const { peerId, offsetId } = payload;
   const peer = selectPeer(global, peerId);
-  let peerStories = selectPeerStories(global, peerId);
+  const peerStories = selectPeerStories(global, peerId);
   if (!peer || peerStories?.isFullyLoaded) {
     return;
   }
@@ -309,20 +309,18 @@ addActionHandler('loadPeerProfileStories', async (global, actions, payload): Pro
   }
 
   global = getGlobal();
-  global = addStoriesForPeer(global, peerId, result.stories, result.pinnedIds);
-  peerStories = selectPeerStories(global, peerId);
-  if (Object.values(result.stories).length === 0
-    || (peerStories?.profileIds?.length && peerStories?.profileIds.length >= result.count)) {
+  if (Object.values(result.stories).length === 0) {
     global = updatePeerStoriesFullyLoaded(global, peerId, true);
   }
 
+  global = addStoriesForPeer(global, peerId, result.stories, result.pinnedIds);
   setGlobal(global);
 });
 
 addActionHandler('loadStoriesArchive', async (global, actions, payload): Promise<void> => {
   const { peerId, offsetId } = payload;
   const peer = selectPeer(global, peerId);
-  let peerStories = selectPeerStories(global, peerId);
+  const peerStories = selectPeerStories(global, peerId);
   if (!peer || peerStories?.isArchiveFullyLoaded) return;
 
   const result = await callApi('fetchStoriesArchive', { peer, offsetId });
@@ -331,13 +329,10 @@ addActionHandler('loadStoriesArchive', async (global, actions, payload): Promise
   }
 
   global = getGlobal();
-  global = addStoriesForPeer(global, peerId, result.stories, undefined, true);
-
-  peerStories = selectPeerStories(global, peerId);
-  if (Object.values(result.stories).length === 0
-    || (peerStories?.archiveIds?.length && peerStories?.archiveIds.length >= result.count)) {
+  if (Object.values(result.stories).length === 0) {
     global = updatePeerStoriesFullyLoaded(global, peerId, true, true);
   }
+  global = addStoriesForPeer(global, peerId, result.stories, undefined, true);
   setGlobal(global);
 });
 

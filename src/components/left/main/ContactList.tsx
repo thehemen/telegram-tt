@@ -5,8 +5,7 @@ import { getActions, withGlobal } from '../../../global';
 import type { ApiUser, ApiUserStatus } from '../../../api/types';
 import { StoryViewerOrigin } from '../../../types';
 
-import { sortUserIds } from '../../../global/helpers';
-import { filterPeersByQuery } from '../../../global/helpers/peers';
+import { filterUsersByName, sortUserIds } from '../../../global/helpers';
 
 import useAppLayout from '../../../hooks/useAppLayout';
 import useHistoryBack from '../../../hooks/useHistoryBack';
@@ -62,7 +61,7 @@ const ContactList: FC<OwnProps & StateProps> = ({
       return undefined;
     }
 
-    const filteredIds = filterPeersByQuery({ ids: contactIds, query: filter, type: 'user' });
+    const filteredIds = filterUsersByName(contactIds, usersById, filter);
 
     return sortUserIds(filteredIds, usersById, userStatusesById);
   }, [contactIds, filter, usersById, userStatusesById]);

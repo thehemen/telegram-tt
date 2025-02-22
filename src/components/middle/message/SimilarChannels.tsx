@@ -3,16 +3,14 @@ import React, {
 } from '../../../lib/teact/teact';
 import { getActions, getGlobal, withGlobal } from '../../../global';
 
-import type { ApiChat, ApiChatFullInfo } from '../../../api/types';
+import type { ApiChat } from '../../../api/types';
 
 import {
   selectChat,
-  selectChatFullInfo,
   selectIsCurrentUserPremium,
   selectSimilarChannelIds,
 } from '../../../global/selectors';
 import buildClassName from '../../../util/buildClassName';
-import { getServerTime } from '../../../util/serverTime';
 import { formatIntegerCompact } from '../../../util/textFormat';
 
 import useTimeout from '../../../hooks/schedulers/useTimeout';
@@ -33,7 +31,6 @@ const DEFAULT_BADGE_COLOR = '#3C3C4399';
 const SHOW_CHANNELS_NUMBER = 10;
 const MIN_SKELETON_DELAY = 300;
 const MAX_SKELETON_DELAY = 2000;
-const AUTO_EXPAND_TIME = 10; // Seconds from joining
 
 type OwnProps = {
   chatId: string;
@@ -41,19 +38,17 @@ type OwnProps = {
 
 type StateProps = {
   similarChannelIds?: string[];
-  isExpanded?: boolean;
-  count?: number;
+  shouldShowInChat?: boolean;
+  count: number;
   isCurrentUserPremium: boolean;
-  channelJoinInfo?: ApiChatFullInfo['joinInfo'];
 };
 
 const SimilarChannels = ({
   chatId,
   similarChannelIds,
-  isExpanded,
+  shouldShowInChat,
   count,
   isCurrentUserPremium,
-  channelJoinInfo,
 }: StateProps & OwnProps) => {
   const lang = useOldLang();
   const { toggleChannelRecommendations, loadChannelRecommendations } = getActions();
@@ -70,18 +65,17 @@ const SimilarChannels = ({
     return similarChannelIds.map((id) => selectChat(global, id)).filter(Boolean);
   }, [similarChannelIds]);
   // Show skeleton while loading similar channels
-  const [shouldRenderSkeleton, setShouldRenderSkeleton] = useState(false);
+  const [shoulRenderSkeleton, setShoulRenderSkeleton] = useState(!similarChannelIds);
   const firstSimilarChannels = useMemo(() => similarChannels?.slice(0, SHOW_CHANNELS_NUMBER), [similarChannels]);
   const areSimilarChannelsPresent = Boolean(firstSimilarChannels?.length);
 
+  useHorizontalScroll(ref, !areSimilarChannelsPresent || !shouldShowInChat || shoulRenderSkeleton, true);
   const isAnimating = isHiding || isShowing;
   const shouldRenderChannels = Boolean(
-    !shouldRenderSkeleton
-      && (isExpanded || isAnimating)
+    !shoulRenderSkeleton
+      && (shouldShowInChat || isAnimating)
       && areSimilarChannelsPresent,
   );
-
-  useHorizontalScroll(ref, !shouldRenderChannels, true);
 
   useEffect(() => {
     if (!similarChannelIds) {
@@ -89,38 +83,30 @@ const SimilarChannels = ({
     }
   }, [chatId, similarChannelIds]);
 
-  useTimeout(() => setShouldRenderSkeleton(false), MAX_SKELETON_DELAY);
+  useTimeout(() => setShoulRenderSkeleton(false), MAX_SKELETON_DELAY);
 
   useEffect(() => {
-    if (shouldRenderSkeleton && similarChannels && isExpanded) {
+    if (shoulRenderSkeleton && similarChannels && shouldShowInChat) {
       const id = setTimeout(() => {
-        setShouldRenderSkeleton(false);
+        setShoulRenderSkeleton(false);
       }, MIN_SKELETON_DELAY);
 
       return () => clearTimeout(id);
     }
 
     return undefined;
-  }, [similarChannels, isExpanded, shouldRenderSkeleton]);
+  }, [similarChannels, shouldShowInChat, shoulRenderSkeleton]);
 
   const handleToggle = useLastCallback(() => {
     toggleChannelRecommendations({ chatId });
-    if (isExpanded) {
+    if (shouldShowInChat) {
       markNotShowing();
       markHiding();
     } else {
       markShowing();
       markNotHiding();
-      setShouldRenderSkeleton(!similarChannelIds);
     }
   });
-
-  useEffect(() => {
-    if (!channelJoinInfo?.joinedDate || isExpanded) return;
-    if (getServerTime() - channelJoinInfo.joinedDate <= AUTO_EXPAND_TIME) {
-      handleToggle();
-    }
-  }, [channelJoinInfo, isExpanded]);
 
   return (
     <div className={buildClassName(styles.root)}>
@@ -132,7 +118,7 @@ const SimilarChannels = ({
           {lang('ChannelJoined')}
         </span>
       </div>
-      {shouldRenderSkeleton && <Skeleton className={styles.skeleton} />}
+      {shoulRenderSkeleton && <Skeleton className={styles.skeleton} />}
       {shouldRenderChannels && (
         <div
           className={buildClassName(
@@ -174,7 +160,7 @@ const SimilarChannels = ({
                   <MoreChannels
                     channel={channel}
                     chatId={chatId}
-                    channelsCount={count! - SHOW_CHANNELS_NUMBER + 1}
+                    channelsCount={count - SHOW_CHANNELS_NUMBER + 1}
                     isCurrentUserPremium={isCurrentUserPremium}
                   />
                 ) : (
@@ -253,16 +239,14 @@ function MoreChannels({
 
 export default memo(
   withGlobal<OwnProps>((global, { chatId }): StateProps => {
-    const { similarChannelIds, isExpanded, count } = selectSimilarChannelIds(global, chatId) || {};
+    const { similarChannelIds, shouldShowInChat, count } = selectSimilarChannelIds(global, chatId) || {};
     const isCurrentUserPremium = selectIsCurrentUserPremium(global);
-    const chatFullInfo = selectChatFullInfo(global, chatId);
 
     return {
       similarChannelIds,
-      isExpanded,
+      shouldShowInChat,
       count,
       isCurrentUserPremium,
-      channelJoinInfo: chatFullInfo?.joinInfo,
     };
   })(SimilarChannels),
 );

@@ -57,7 +57,6 @@ type StateProps =
     topic?: ApiTopic;
     messagesCount?: number;
     emojiStatusSticker?: ApiSticker;
-    emojiStatusSlug?: string;
     profilePhotos?: ApiPeerPhotos;
   };
 
@@ -78,7 +77,6 @@ const ProfileInfo: FC<OwnProps & StateProps> = ({
   topic,
   messagesCount,
   emojiStatusSticker,
-  emojiStatusSlug,
   profilePhotos,
   peerId,
 }) => {
@@ -88,7 +86,6 @@ const ProfileInfo: FC<OwnProps & StateProps> = ({
     openStickerSet,
     openPrivacySettingsNoticeModal,
     loadMoreProfilePhotos,
-    openUniqueGiftBySlug,
   } = getActions();
 
   const lang = useOldLang();
@@ -140,10 +137,6 @@ const ProfileInfo: FC<OwnProps & StateProps> = ({
   });
 
   const handleStatusClick = useLastCallback(() => {
-    if (emojiStatusSlug) {
-      openUniqueGiftBySlug({ slug: emojiStatusSlug });
-      return;
-    }
     if (!peerId) {
       openStickerSet({
         stickerSetInfo: emojiStatusSticker!.stickerSetInfo,
@@ -390,7 +383,6 @@ export default memo(withGlobal<OwnProps>(
 
     const emojiStatus = (user || chat)?.emojiStatus;
     const emojiStatusSticker = emojiStatus ? global.customEmojis.byId[emojiStatus.documentId] : undefined;
-    const emojiStatusSlug = emojiStatus?.type === 'collectible' ? emojiStatus.slug : undefined;
 
     return {
       user,
@@ -399,7 +391,6 @@ export default memo(withGlobal<OwnProps>(
       mediaIndex,
       avatarOwnerId,
       emojiStatusSticker,
-      emojiStatusSlug,
       profilePhotos,
       ...(topic && {
         topic,

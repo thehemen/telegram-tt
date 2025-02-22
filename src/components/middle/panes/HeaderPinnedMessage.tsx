@@ -55,7 +55,6 @@ import PinnedMessageNavigation from '../PinnedMessageNavigation';
 
 import styles from './HeaderPinnedMessage.module.scss';
 
-const MAX_LENGTH = 256;
 const SHOW_LOADER_DELAY = 450;
 const EMOJI_SIZE = 1.125 * REM;
 
@@ -313,7 +312,6 @@ const HeaderPinnedMessage = ({
             <p dir="auto" className={styles.summary}>
               <MessageSummary
                 message={renderingPinnedMessage}
-                truncateLength={MAX_LENGTH}
                 noEmoji={Boolean(mediaThumbnail)}
                 emojiSize={EMOJI_SIZE}
               />

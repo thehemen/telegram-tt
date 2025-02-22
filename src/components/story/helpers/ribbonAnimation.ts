@@ -144,8 +144,6 @@ export function animateOpening(isArchived?: boolean) {
             }
             toggleAvatar?.classList.remove('animating');
             peer.classList.remove('animating');
-
-            callbacks.delete(cb);
           });
         }, ANIMATION_DURATION + ANIMATION_END_DELAY);
 
@@ -285,8 +283,6 @@ export function animateClosing(isArchived?: boolean) {
             peer.classList.remove('animating');
             toggleAvatar!.classList.remove('animating');
           });
-
-          callbacks.delete(cb);
         }, ANIMATION_DURATION + ANIMATION_END_DELAY);
 
         callbacks.add(cb);

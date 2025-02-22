@@ -152,11 +152,7 @@ const useEditing = (
     }
 
     if (!text && !hasMessageMedia(editedMessage)) {
-      openDeleteMessageModal({
-        chatId,
-        messageIds: [editedMessage.id],
-        isSchedule: type === 'scheduled',
-      });
+      openDeleteMessageModal({ isSchedule: type === 'scheduled', message: editedMessage });
       return;
     }
 

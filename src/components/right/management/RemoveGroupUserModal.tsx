@@ -3,11 +3,11 @@ import React, {
   memo, useCallback,
   useMemo, useState,
 } from '../../../lib/teact/teact';
-import { getActions, withGlobal } from '../../../global';
+import { getActions, getGlobal, withGlobal } from '../../../global';
 
 import type { ApiChat, ApiChatMember } from '../../../api/types';
 
-import { filterPeersByQuery } from '../../../global/helpers/peers';
+import { filterUsersByName } from '../../../global/helpers';
 import { selectChatFullInfo } from '../../../global/selectors';
 
 import useOldLang from '../../../hooks/useOldLang';
@@ -49,7 +49,10 @@ const RemoveGroupUserModal: FC<OwnProps & StateProps> = ({
         return acc;
       }, []);
 
-    return filterPeersByQuery({ ids: availableMemberIds, query: search, type: 'user' });
+    // No need for expensive global updates on users, so we avoid them
+    const usersById = getGlobal().users.byId;
+
+    return filterUsersByName(availableMemberIds, usersById, search);
   }, [chatMembers, currentUserId, search]);
 
   const handleRemoveUser = useCallback((userId: string) => {

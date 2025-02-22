@@ -1,0 +1,90 @@
+.ChatFolders {
+  display: flex;            // Ensure horizontal layout
+  flex-direction: row;      // Side by side: left = sidebar, right = main
+  height: 100%;             // Fill the parent container
+  overflow: hidden;         // Prevent accidental scrollbars if you need
+  background-color: #fff;   // Or your default background
+
+  &.with-story-ribbon {
+    // If you keep the story ribbon, you might offset it differently or do nothing
+    padding-top: 5rem; 
+  }
+
+  &__sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 4rem;            // The fixed width for your left sidebar
+    background-color: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    padding: 0.5rem 0;
+    flex-shrink: 0;
+    align-items: center;    // Or flex-start if you want labels left-aligned
+  }
+
+  // The folder item container
+  .folder-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    cursor: pointer;
+    position: relative;
+    padding: 0.5rem 0;
+
+    // Non-active labels default to a grey text
+    .folder-label {
+      font-size: 0.75rem;
+      line-height: 1;
+      text-align: center;
+      max-width: 3rem; 
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    // If you hover a non-active folder
+    &:hover {
+      background-color: var(--sidebar-hover-bg);
+    }
+
+    // The "active" folder: different background, label color
+    &:active {
+      background-color: var(--sidebar-active-bg);
+
+      .folder-label {
+        color: #5597FF; // Blue for the active folder label
+      }
+    }
+
+    .folder-icon {
+      width: 1.75rem;
+      height: 1.75rem;
+      display: block;
+      object-fit: contain; // or cover
+      margin-bottom: 0.25rem;
+    }
+
+    .badge {
+      position: absolute;
+      right: 0.3rem;
+      top: 0.3rem;
+      min-width: 1rem;
+      padding: 0 0.3rem;
+      font-size: 0.75rem;
+      line-height: 1.2;
+      border-radius: 1rem;
+      background: var(--accent-color);
+      color: #fff;
+      text-align: center;
+    }
+  }
+
+  &__main {
+    flex: 1;                // The rest of the space goes to the main chat area
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    // background-color, etc., if needed
+  }
+}

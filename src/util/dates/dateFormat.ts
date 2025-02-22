@@ -3,7 +3,6 @@ import type { TimeFormat } from '../../types';
 import type { LangFn } from '../localization';
 
 import withCache from '../withCache';
-import { getDays } from './units';
 
 const WEEKDAYS_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTHS_FULL = [
@@ -87,26 +86,22 @@ export function formatMonthAndYear(lang: OldLangFn, date: Date, isShort = false)
 }
 
 export function formatCountdown(
-  lang: LangFn,
-  secondsLeft: number,
+  lang: OldLangFn,
+  msLeft: number,
 ) {
-  const days = getDays(secondsLeft);
-  if (secondsLeft < 0) {
+  const days = Math.floor(msLeft / MILLISECONDS_IN_DAY);
+  if (msLeft < 0) {
     return 0;
   } else if (days < 1) {
-    return formatMediaDuration(secondsLeft);
+    return formatMediaDuration(msLeft / 1000);
   } else if (days < 7) {
-    const count = days;
-    return lang('Days', { count }, { pluralValue: count });
+    return lang('Days', days);
   } else if (days < 30) {
-    const count = Math.floor(days / 7);
-    return lang('Weeks', { count }, { pluralValue: count });
+    return lang('Weeks', Math.floor(days / 7));
   } else if (days < 365) {
-    const count = Math.floor(days / 30);
-    return lang('Months', { count }, { pluralValue: count });
+    return lang('Months', Math.floor(days / 30));
   } else {
-    const count = Math.floor(days / 365);
-    return lang('Years', { count }, { pluralValue: count });
+    return lang('Years', Math.floor(days / 365));
   }
 }
 
@@ -223,12 +218,11 @@ export function formatHumanDate(
       return (isUpperFirst || !isShort ? upperFirst : lowerFirst)(lang('Weekday.Yesterday'));
     }
 
-    const limitBefore = new Date(today);
-    limitBefore.setDate(today.getDate() - 6); // Avoid returning same weekday as today
-    const limitAhead = new Date(today);
-    limitAhead.setDate(today.getDate() + 6);
-
-    if (date >= limitBefore && date <= limitAhead) {
+    const weekAgo = new Date(today);
+    const weekAhead = new Date(today);
+    weekAgo.setDate(today.getDate() - 7);
+    weekAhead.setDate(today.getDate() + 7);
+    if (date >= weekAgo && date <= weekAhead) {
       const weekDayString = formatWeekday(lang, date.getDay(), isShort);
       return (isUpperFirst || !isShort ? upperFirst : lowerFirst)(weekDayString);
     }

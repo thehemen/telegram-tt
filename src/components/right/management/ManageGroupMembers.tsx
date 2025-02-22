@@ -8,10 +8,9 @@ import type { ApiChatMember, ApiUserStatus } from '../../../api/types';
 import { ManagementScreens, NewChatMembersProgress } from '../../../types';
 
 import {
-  getHasAdminRight, isChatBasicGroup,
+  filterUsersByName, getHasAdminRight, isChatBasicGroup,
   isChatChannel, isUserBot, isUserRightBanned, sortUserIds,
 } from '../../../global/helpers';
-import { filterPeersByQuery } from '../../../global/helpers/peers';
 import { selectChat, selectChatFullInfo, selectTabState } from '../../../global/selectors';
 import { unique } from '../../../util/iteratees';
 import sortChatIds from '../../common/helpers/sortChatIds';
@@ -122,7 +121,7 @@ const ManageGroupMembers: FC<OwnProps & StateProps> = ({
     const shouldUseSearchResults = Boolean(searchQuery);
     const listedIds = !shouldUseSearchResults
       ? memberIds
-      : (localContactIds ? filterPeersByQuery({ ids: localContactIds, query: searchQuery, type: 'user' }) : []);
+      : (localContactIds ? filterUsersByName(localContactIds, usersById, searchQuery) : []);
 
     return sortChatIds(
       unique([
@@ -209,7 +208,7 @@ const ManageGroupMembers: FC<OwnProps & StateProps> = ({
     <div className="Management">
       {noAdmins && renderSearchField()}
       <div className="custom-scroll">
-        {canHideParticipants && !isChannel && (
+        {canHideParticipants && (
           <div className="section">
             <ListItem icon="group" ripple onClick={handleToggleParticipantsHidden}>
               <span>{lang('ChannelHideMembers')}</span>

@@ -121,8 +121,6 @@ function getStateFromTabType(tabType: ProfileTabType) {
   switch (tabType) {
     case 'members':
       return ProfileState.MemberList;
-    case 'gifts':
-      return ProfileState.GiftList;
     case 'stories':
       return ProfileState.StoryList;
     case 'dialogs':

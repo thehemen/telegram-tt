@@ -422,7 +422,6 @@ async function fetchCommonStoriesRequest({ method, peerId }: {
   result.stories.forEach((story) => addStoryToLocalDb(story, peerId));
 
   return {
-    count: result.count,
     stories,
     pinnedIds: result.pinnedToTop,
   };

@@ -10,9 +10,10 @@ import { LoadMoreDirection } from '../../../types';
 
 import { ALL_FOLDER_ID, GLOBAL_SUGGESTED_CHANNELS_ID } from '../../../config';
 import {
+  filterChatsByName,
+  filterUsersByName,
   isChatChannel,
 } from '../../../global/helpers';
-import { filterPeersByQuery } from '../../../global/helpers/peers';
 import { selectSimilarChannelIds, selectTabState } from '../../../global/selectors';
 import buildClassName from '../../../util/buildClassName';
 import { getOrderedIds } from '../../../util/folderManager';
@@ -220,6 +221,7 @@ const ChatResults: FC<OwnProps & StateProps> = ({
     }
 
     // No need for expensive global updates, so we avoid them
+    const usersById = getGlobal().users.byId;
     const chatsById = getGlobal().chats.byId;
 
     const orderedChatIds = getOrderedIds(ALL_FOLDER_ID) ?? [];
@@ -228,7 +230,7 @@ const ChatResults: FC<OwnProps & StateProps> = ({
       const chat = chatsById[id];
       return chat && isChatChannel(chat);
     });
-    const localChatIds = filterPeersByQuery({ ids: filteredChatIds, query: searchQuery, type: 'chat' });
+    const localChatIds = filterChatsByName(oldLang, filteredChatIds, chatsById, searchQuery, currentUserId);
 
     if (isChannelList) return localChatIds;
 
@@ -237,9 +239,9 @@ const ChatResults: FC<OwnProps & StateProps> = ({
       ...(contactIds || []),
     ];
 
-    const localContactIds = filterPeersByQuery({
-      ids: contactIdsWithMe, query: searchQuery, type: 'user',
-    });
+    const localContactIds = filterUsersByName(
+      contactIdsWithMe, usersById, searchQuery, currentUserId, oldLang('SavedMessages'),
+    );
 
     const localPeerIds = [
       ...localContactIds,
@@ -250,7 +252,7 @@ const ChatResults: FC<OwnProps & StateProps> = ({
       ...sortChatIds(localPeerIds, undefined, currentUserId ? [currentUserId] : undefined),
       ...sortChatIds(accountPeerIds || []),
     ]);
-  }, [searchQuery, currentUserId, contactIds, accountPeerIds, isChannelList]);
+  }, [searchQuery, oldLang, currentUserId, contactIds, accountPeerIds, isChannelList]);
 
   useHorizontalScroll(chatSelectionRef, !localResults.length || isChannelList, true);
 

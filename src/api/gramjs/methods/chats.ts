@@ -620,12 +620,12 @@ async function getFullChannelInfo(
     ? exportedInvite.link
     : undefined;
 
-  const { members, userStatusesById } = (canViewParticipants && await fetchMembers({ chat })) || {};
+  const { members, userStatusesById } = (canViewParticipants && await fetchMembers(id, accessHash)) || {};
   const { members: kickedMembers, userStatusesById: bannedStatusesById } = (
-    canViewParticipants && adminRights && await fetchMembers({ chat, memberFilter: 'kicked' })
+    canViewParticipants && adminRights && await fetchMembers(id, accessHash, 'kicked')
   ) || {};
   const { members: adminMembers, userStatusesById: adminStatusesById } = (
-    canViewParticipants && await fetchMembers({ chat, memberFilter: 'admin' })
+    canViewParticipants && await fetchMembers(id, accessHash, 'admin')
   ) || {};
   const botCommands = botInfo ? buildApiChatBotCommands(botInfo) : undefined;
   const memberInfoRequest = !chat.isNotJoined && chat.type === 'chatTypeChannel'
@@ -840,15 +840,14 @@ export function joinChannel({
 }
 
 export function deleteChatUser({
-  chat, user, shouldRevokeHistory,
+  chat, user,
 }: {
-  chat: ApiChat; user: ApiUser; shouldRevokeHistory?: boolean;
+  chat: ApiChat; user: ApiUser;
 }) {
   if (chat.type !== 'chatTypeBasicGroup') return undefined;
   return invokeRequest(new GramJs.messages.DeleteChatUser({
     chatId: buildInputEntity(chat.id, chat.accessHash) as BigInt.BigInteger,
     userId: buildInputEntity(user.id, user.accessHash) as GramJs.InputUser,
-    revokeHistory: shouldRevokeHistory || undefined,
   }), {
     shouldReturnTrue: true,
   });
@@ -1286,31 +1285,22 @@ export function toggleSignatures({
 type ChannelMembersFilter =
   'kicked'
   | 'admin'
-  | 'recent'
-  | 'search';
+  | 'recent';
 
-export async function fetchMembers({
-  chat,
-  memberFilter = 'recent',
-  offset,
-  query = '',
-} : {
-  chat: ApiChat;
-  memberFilter?: ChannelMembersFilter;
-  offset?: number;
-  query?: string;
-}) {
+export async function fetchMembers(
+  chatId: string,
+  accessHash: string,
+  memberFilter: ChannelMembersFilter = 'recent',
+  offset?: number,
+) {
   let filter: GramJs.TypeChannelParticipantsFilter;
 
   switch (memberFilter) {
     case 'kicked':
-      filter = new GramJs.ChannelParticipantsKicked({ q: query });
+      filter = new GramJs.ChannelParticipantsKicked({ q: '' });
       break;
     case 'admin':
       filter = new GramJs.ChannelParticipantsAdmins();
-      break;
-    case 'search':
-      filter = new GramJs.ChannelParticipantsSearch({ q: query });
       break;
     default:
       filter = new GramJs.ChannelParticipantsRecent();
@@ -1318,12 +1308,12 @@ export async function fetchMembers({
   }
 
   const result = await invokeRequest(new GramJs.channels.GetParticipants({
-    channel: buildInputEntity(chat.id, chat.accessHash) as GramJs.InputChannel,
+    channel: buildInputEntity(chatId, accessHash) as GramJs.InputChannel,
     filter,
     offset,
     limit: MEMBERS_LOAD_SLICE,
   }), {
-    abortControllerChatId: chat.id,
+    abortControllerChatId: chatId,
   });
 
   if (!result || result instanceof GramJs.channels.ChannelParticipantsNotModified) {

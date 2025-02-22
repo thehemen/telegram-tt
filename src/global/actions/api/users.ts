@@ -389,7 +389,7 @@ addActionHandler('reportSpam', (global, actions, payload): ActionReturnType => {
 
 addActionHandler('setEmojiStatus', async (global, actions, payload): Promise<void> => {
   const {
-    emojiStatus, referrerWebAppKey, tabId = getCurrentTabId(),
+    emojiStatusId, referrerWebAppKey, expires, tabId = getCurrentTabId(),
   } = payload;
 
   const isCurrentUserPremium = selectIsCurrentUserPremium(global);
@@ -411,7 +411,7 @@ addActionHandler('setEmojiStatus', async (global, actions, payload): Promise<voi
     return;
   }
 
-  const result = await callApi('updateEmojiStatus', emojiStatus);
+  const result = await callApi('updateEmojiStatus', emojiStatusId, expires);
 
   if (referrerWebAppKey) {
     if (!result) {
@@ -439,7 +439,7 @@ addActionHandler('setEmojiStatus', async (global, actions, payload): Promise<voi
       message: {
         key: 'BotSuggestedStatusUpdated',
       },
-      customEmojiIconId: emojiStatus.documentId,
+      customEmojiIconId: emojiStatusId,
       tabId,
     });
   }

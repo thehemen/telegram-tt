@@ -19,6 +19,13 @@
   flex-grow: 1;
 }
 
+.subtitle {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  font-size: 0.875rem;
+}
+
 .status {
   display: flex;
   flex-direction: column;
@@ -42,20 +49,11 @@
 }
 
 .title {
-  font-size: 0.9375rem;
-}
-
-.subtitle {
-  display: flex;
-  align-items: center;
-  gap: 0.125rem;
-  font-size: 0.8125rem;
-  line-height: 1rem;
+  font-size: 1rem;
 }
 
 .description, .statusPeriod, .statusEnded {
-  font-size: 0.8125rem;
-  line-height: 1rem;
+  font-size: 0.875rem;
   color: var(--color-text-secondary);
 }
 
@@ -65,7 +63,7 @@
 
 .preview {
   position: relative;
-  align-self: center;
+  align-self: flex-start;
 }
 
 .subscriptionStar {

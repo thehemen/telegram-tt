@@ -3,12 +3,12 @@ import React, {
   memo, useCallback, useMemo, useRef,
   useState,
 } from '../../../lib/teact/teact';
-import { getActions, withGlobal } from '../../../global';
+import { getActions, getGlobal, withGlobal } from '../../../global';
 
 import { LoadMoreDirection } from '../../../types';
 
 import { SLIDE_TRANSITION_DURATION } from '../../../config';
-import { filterPeersByQuery } from '../../../global/helpers/peers';
+import { filterUsersByName } from '../../../global/helpers';
 import { selectTabState } from '../../../global/selectors';
 import { throttle } from '../../../util/schedulers';
 
@@ -58,7 +58,8 @@ const BotAppResults: FC<OwnProps & StateProps> = ({
     const recentSet = new Set(recentBotIds);
     const withoutRecent = foundIds.filter((id) => !recentSet.has(id));
 
-    return filterPeersByQuery({ ids: withoutRecent, query: searchQuery, type: 'user' });
+    const usersById = getGlobal().users.byId;
+    return filterUsersByName(withoutRecent, usersById, searchQuery);
   }, [foundIds, recentBotIds, searchQuery]);
 
   const handleChatClick = useLastCallback((id: string) => {

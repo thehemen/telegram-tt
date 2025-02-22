@@ -1,6 +1,8 @@
 import React, { memo, useMemo, useState } from '../../../lib/teact/teact';
 
-import { filterPeersByQuery } from '../../../global/helpers/peers';
+import type { ApiUser } from '../../../api/types';
+
+import { filterUsersByName } from '../../../global/helpers';
 import { unique } from '../../../util/iteratees';
 import { MEMO_EMPTY_ARRAY } from '../../../util/memo';
 
@@ -14,6 +16,7 @@ interface OwnProps {
   currentUserId: string;
   selectedIds?: string[];
   lockedIds?: string[];
+  usersById: Record<string, ApiUser>;
   onSelect: (selectedIds: string[]) => void;
 }
 
@@ -21,6 +24,7 @@ function AllowDenyList({
   id,
   contactListIds,
   currentUserId,
+  usersById,
   selectedIds,
   lockedIds,
   onSelect,
@@ -30,8 +34,8 @@ function AllowDenyList({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const displayedIds = useMemo(() => {
     const contactIds = (contactListIds || []).filter((userId) => userId !== currentUserId);
-    return unique(filterPeersByQuery({ ids: [...selectedIds || [], ...contactIds], query: searchQuery, type: 'user' }));
-  }, [contactListIds, currentUserId, searchQuery, selectedIds]);
+    return unique(filterUsersByName([...selectedIds || [], ...contactIds], usersById, searchQuery));
+  }, [contactListIds, currentUserId, searchQuery, selectedIds, usersById]);
 
   return (
     <PeerPicker

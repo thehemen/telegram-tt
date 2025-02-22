@@ -18,7 +18,6 @@ import {
   isPeerUser,
 } from '../../global/helpers';
 import buildClassName from '../../util/buildClassName';
-import buildStyle from '../../util/buildStyle';
 import { copyTextToClipboard } from '../../util/clipboard';
 import stopEvent from '../../util/stopEvent';
 import renderText from './helpers/renderText';
@@ -48,7 +47,6 @@ type OwnProps = {
   iconElement?: React.ReactNode;
   onEmojiStatusClick?: NoneToVoidFunction;
   observeIntersection?: ObserveFn;
-  statusSparklesColor?: string;
 };
 
 const FullNameTitle: FC<OwnProps> = ({
@@ -65,7 +63,6 @@ const FullNameTitle: FC<OwnProps> = ({
   iconElement,
   onEmojiStatusClick,
   observeIntersection,
-  statusSparklesColor,
 }) => {
   const lang = useOldLang();
   const { showNotification } = getActions();
@@ -75,7 +72,6 @@ const FullNameTitle: FC<OwnProps> = ({
   const title = realPeer && (isUser ? getUserFullName(realPeer) : getChatTitle(lang, realPeer));
   const isPremium = isUser && realPeer.isPremium;
   const canShowEmojiStatus = withEmojiStatus && !isSavedMessages && realPeer;
-  const emojiStatus = realPeer?.emojiStatus;
 
   const handleTitleClick = useLastCallback((e) => {
     if (!title || !canCopyTitle) {
@@ -138,20 +134,17 @@ const FullNameTitle: FC<OwnProps> = ({
         <>
           {!noVerified && peer?.isVerified && <VerifiedIcon />}
           {!noFake && peer?.fakeType && <FakeIcon fakeType={peer.fakeType} />}
-          {canShowEmojiStatus && emojiStatus && (
+          {canShowEmojiStatus && realPeer.emojiStatus && (
             <Transition
               className={styles.transition}
-              activeKey={Number(emojiStatus.documentId)}
+              activeKey={Number(realPeer.emojiStatus.documentId)}
               name="fade"
               shouldCleanup
               shouldRestoreHeight
             >
               <CustomEmoji
                 forceAlways
-                withSparkles={emojiStatus.type === 'collectible'}
-                sparklesClassName="statusSparkles"
-                sparklesStyle={buildStyle(statusSparklesColor && `color: ${statusSparklesColor}`)}
-                documentId={emojiStatus.documentId}
+                documentId={realPeer.emojiStatus.documentId}
                 size={emojiStatusSize}
                 loopLimit={!noLoopLimit ? EMOJI_STATUS_LOOP_LIMIT : undefined}
                 observeIntersectionForLoading={observeIntersection}
@@ -159,7 +152,7 @@ const FullNameTitle: FC<OwnProps> = ({
               />
             </Transition>
           )}
-          {canShowEmojiStatus && !emojiStatus && isPremium && <StarIcon />}
+          {canShowEmojiStatus && !realPeer.emojiStatus && isPremium && <StarIcon />}
         </>
       )}
       {iconElement}

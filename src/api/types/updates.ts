@@ -40,7 +40,7 @@ import type { ApiStarsAmount } from './payments';
 import type { ApiPrivacyKey, LangPackStringValue, PrivacyVisibility } from './settings';
 import type { ApiStealthMode, ApiStory, ApiStorySkipped } from './stories';
 import type {
-  ApiEmojiStatusType, ApiUser, ApiUserFullInfo, ApiUserStatus,
+  ApiEmojiStatus, ApiUser, ApiUserFullInfo, ApiUserStatus,
 } from './users';
 
 export type ApiUpdateReady = {
@@ -351,12 +351,6 @@ export type ApiUpdateDeleteHistory = {
   chatId: string;
 };
 
-export type ApiDeleteParticipantHistory = {
-  '@type': 'deleteParticipantHistory';
-  chatId: string;
-  peerId: string;
-};
-
 export type ApiUpdateDeleteSavedHistory = {
   '@type': 'deleteSavedHistory';
   chatId: string;
@@ -419,7 +413,7 @@ export type ApiUpdateUserStatus = {
 export type ApiUpdateUserEmojiStatus = {
   '@type': 'updateUserEmojiStatus';
   userId: string;
-  emojiStatus?: ApiEmojiStatusType;
+  emojiStatus?: ApiEmojiStatus;
 };
 
 export type ApiUpdateRecentEmojiStatuses = {
@@ -812,9 +806,8 @@ export type ApiUpdate = (
   ApiUpdateChatListType | ApiUpdateChatFolder | ApiUpdateChatFoldersOrder | ApiUpdateRecommendedChatFolders |
   ApiUpdateNewMessage | ApiUpdateMessage | ApiUpdateThreadInfo | ApiUpdateCommonBoxMessages |
   ApiUpdateDeleteMessages | ApiUpdateMessagePoll | ApiUpdateMessagePollVote | ApiUpdateDeleteHistory |
-  ApiDeleteParticipantHistory | ApiUpdateMessageSendSucceeded | ApiUpdateMessageSendFailed |
-  ApiUpdateServiceNotification | ApiDeleteContact | ApiUpdateUser | ApiUpdateUserStatus |
-  ApiUpdateUserFullInfo | ApiUpdateVideoProcessingPending |
+  ApiUpdateMessageSendSucceeded | ApiUpdateMessageSendFailed | ApiUpdateServiceNotification |
+  ApiDeleteContact | ApiUpdateUser | ApiUpdateUserStatus | ApiUpdateUserFullInfo | ApiUpdateVideoProcessingPending |
   ApiUpdateAvatar | ApiUpdateMessageImage | ApiUpdateDraftMessage |
   ApiUpdateError | ApiUpdateResetContacts | ApiUpdateStartEmojiInteraction |
   ApiUpdateFavoriteStickers | ApiUpdateStickerSet | ApiUpdateStickerSets | ApiUpdateStickerSetsOrder |

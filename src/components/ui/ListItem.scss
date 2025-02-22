@@ -104,6 +104,7 @@
     text-align: initial;
     unicode-bidi: plaintext;
     text-overflow: ellipsis;
+    overflow: hidden;
   }
 
   .other-usernames {
@@ -224,7 +225,7 @@
 
     .info {
       flex: 1;
-      min-width: 0;
+      overflow: hidden;
     }
 
     .info-name-title {
@@ -235,10 +236,10 @@
     .info-row,
     .title,
     .subtitle {
+      overflow: hidden;
       display: flex;
       justify-content: flex-start;
       align-items: center;
-      min-width: 0;
     }
 
     .separator {
@@ -286,7 +287,7 @@
       display: flex;
       align-items: center;
       flex: 1;
-      min-width: 0;
+      overflow: hidden;
 
       .info {
         display: flex;

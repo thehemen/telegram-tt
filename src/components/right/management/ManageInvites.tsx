@@ -19,10 +19,9 @@ import useInterval from '../../../hooks/schedulers/useInterval';
 import useFlag from '../../../hooks/useFlag';
 import useForceUpdate from '../../../hooks/useForceUpdate';
 import useHistoryBack from '../../../hooks/useHistoryBack';
-import useLang from '../../../hooks/useLang';
 import useOldLang from '../../../hooks/useOldLang';
 
-import AnimatedIconWithPreview from '../../common/AnimatedIconWithPreview';
+import AnimatedIcon from '../../common/AnimatedIcon';
 import Icon from '../../common/icons/Icon';
 import LinkField from '../../common/LinkField';
 import NothingFound from '../../common/NothingFound';
@@ -73,8 +72,7 @@ const ManageInvites: FC<OwnProps & StateProps> = ({
     setOpenedInviteInfo,
   } = getActions();
 
-  const lang = useLang();
-  const oldLang = useOldLang();
+  const lang = useOldLang();
 
   const [isDeleteRevokeAllDialogOpen, openDeleteRevokeAllDialog, closeDeleteRevokeAllDialog] = useFlag();
   const [isRevokeDialogOpen, openRevokeDialog, closeRevokeDialog] = useFlag();
@@ -176,9 +174,9 @@ const ManageInvites: FC<OwnProps & StateProps> = ({
   const copyLink = useCallback((link: string) => {
     copyTextToClipboard(link);
     showNotification({
-      message: oldLang('LinkCopied'),
+      message: lang('LinkCopied'),
     });
-  }, [oldLang, showNotification]);
+  }, [lang, showNotification]);
 
   const prepareUsageText = (invite: ApiExportedInvite) => {
     const {
@@ -186,34 +184,34 @@ const ManageInvites: FC<OwnProps & StateProps> = ({
     } = invite;
     let text = '';
     if (!isRevoked && usageLimit && usage < usageLimit) {
-      text = oldLang('CanJoin', usageLimit - usage);
+      text = lang('CanJoin', usageLimit - usage);
     } else if (usage) {
-      text = oldLang('PeopleJoined', usage);
+      text = lang('PeopleJoined', usage);
     } else {
-      text = oldLang('NoOneJoined');
+      text = lang('NoOneJoined');
     }
 
     if (isRevoked) {
-      text += ` ${BULLET} ${oldLang('Revoked')}`;
+      text += ` ${BULLET} ${lang('Revoked')}`;
       return text;
     }
 
     if (requested) {
-      text += ` ${BULLET} ${oldLang('JoinRequests', requested)}`;
+      text += ` ${BULLET} ${lang('JoinRequests', requested)}`;
     }
 
     if (usageLimit !== undefined && usage === usageLimit) {
-      text += ` ${BULLET} ${oldLang('LinkLimitReached')}`;
+      text += ` ${BULLET} ${lang('LinkLimitReached')}`;
     } else if (expireDate) {
-      const diff = expireDate - getServerTime();
+      const diff = (expireDate - getServerTime()) * 1000;
       text += ` ${BULLET} `;
       if (diff > 0) {
-        text += oldLang('InviteLink.ExpiresIn', formatCountdown(lang, diff));
+        text += lang('InviteLink.ExpiresIn', formatCountdown(lang, diff));
       } else {
-        text += oldLang('InviteLink.Expired');
+        text += lang('InviteLink.Expired');
       }
     } else if (isPermanent) {
-      text += ` ${BULLET} ${oldLang('Permanent')}`;
+      text += ` ${BULLET} ${lang('Permanent')}`;
     }
 
     return text;
@@ -241,14 +239,14 @@ const ManageInvites: FC<OwnProps & StateProps> = ({
   const prepareContextActions = (invite: ApiExportedInvite) => {
     const actions: MenuItemContextAction[] = [];
     actions.push({
-      title: oldLang('Copy'),
+      title: lang('Copy'),
       icon: 'copy',
       handler: () => copyLink(invite.link),
     });
 
     if (!invite.isPermanent && !invite.isRevoked) {
       actions.push({
-        title: oldLang('Edit'),
+        title: lang('Edit'),
         icon: 'edit',
         handler: () => editInvite(invite),
       });
@@ -256,14 +254,14 @@ const ManageInvites: FC<OwnProps & StateProps> = ({
 
     if (!invite.isRevoked) {
       actions.push({
-        title: oldLang('RevokeButton'),
+        title: lang('RevokeButton'),
         icon: 'delete',
         handler: () => askToRevoke(invite),
         destructive: true,
       });
     } else {
       actions.push({
-        title: oldLang('DeleteLink'),
+        title: lang('DeleteLink'),
         icon: 'delete',
         handler: () => askToDelete(invite),
         destructive: true,
@@ -276,12 +274,12 @@ const ManageInvites: FC<OwnProps & StateProps> = ({
     <div className="Management ManageInvites">
       <div className="custom-scroll">
         <div className="section">
-          <AnimatedIconWithPreview
+          <AnimatedIcon
             tgsUrl={LOCAL_TGS_URLS.Invite}
             size={STICKER_SIZE_INVITES}
             className="section-icon"
           />
-          <p className="section-help">{isChannel ? oldLang('PrimaryLinkHelpChannel') : oldLang('PrimaryLinkHelp')}</p>
+          <p className="section-help">{isChannel ? lang('PrimaryLinkHelpChannel') : lang('PrimaryLinkHelp')}</p>
         </div>
         {primaryInviteLink && (
           <div className="section">
@@ -290,13 +288,13 @@ const ManageInvites: FC<OwnProps & StateProps> = ({
               link={primaryInviteLink}
               withShare
               onRevoke={!chat?.usernames ? handlePrimaryRevoke : undefined}
-              title={chat?.usernames ? oldLang('PublicLink') : oldLang('lng_create_permanent_link_title')}
+              title={chat?.usernames ? lang('PublicLink') : lang('lng_create_permanent_link_title')}
             />
           </div>
         )}
         <div className="section" teactFastList>
           <Button isText key="create" className="create-link" onClick={handleCreateNewClick}>
-            {oldLang('CreateNewLink')}
+            {lang('CreateNewLink')}
           </Button>
           {(!temporalInvites || !temporalInvites.length) && <NothingFound text="No links found" key="nothing" />}
           {temporalInvites?.map((invite) => (
@@ -315,18 +313,18 @@ const ManageInvites: FC<OwnProps & StateProps> = ({
               </span>
             </ListItem>
           ))}
-          <p className="section-help hint" key="links-hint">{oldLang('ManageLinksInfoHelp')}</p>
+          <p className="section-help hint" key="links-hint">{lang('ManageLinksInfoHelp')}</p>
         </div>
         {revokedExportedInvites && Boolean(revokedExportedInvites.length) && (
           <div className="section" teactFastList>
-            <p className="section-help" key="title">{oldLang('RevokedLinks')}</p>
+            <p className="section-help" key="title">{lang('RevokedLinks')}</p>
             <ListItem
               icon="delete"
               destructive
               key="delete"
               onClick={openDeleteRevokeAllDialog}
             >
-              <span className="title">{oldLang('DeleteAllRevokedLinks')}</span>
+              <span className="title">{lang('DeleteAllRevokedLinks')}</span>
             </ListItem>
             {revokedExportedInvites?.map((invite) => (
               <ListItem
@@ -350,28 +348,28 @@ const ManageInvites: FC<OwnProps & StateProps> = ({
       <ConfirmDialog
         isOpen={isDeleteRevokeAllDialogOpen}
         onClose={closeDeleteRevokeAllDialog}
-        title={oldLang('DeleteAllRevokedLinks')}
-        text={oldLang('DeleteAllRevokedLinkHelp')}
+        title={lang('DeleteAllRevokedLinks')}
+        text={lang('DeleteAllRevokedLinkHelp')}
         confirmIsDestructive
-        confirmLabel={oldLang('DeleteAll')}
+        confirmLabel={lang('DeleteAll')}
         confirmHandler={handleDeleteAllRevoked}
       />
       <ConfirmDialog
         isOpen={isRevokeDialogOpen}
         onClose={closeRevokeDialog}
-        title={oldLang('RevokeLink')}
-        text={oldLang('RevokeAlert')}
+        title={lang('RevokeLink')}
+        text={lang('RevokeAlert')}
         confirmIsDestructive
-        confirmLabel={oldLang('RevokeButton')}
+        confirmLabel={lang('RevokeButton')}
         confirmHandler={handleRevoke}
       />
       <ConfirmDialog
         isOpen={isDeleteDialogOpen}
         onClose={closeDeleteDialog}
-        title={oldLang('DeleteLink')}
-        text={oldLang('DeleteLinkHelp')}
+        title={lang('DeleteLink')}
+        text={lang('DeleteLinkHelp')}
         confirmIsDestructive
-        confirmLabel={oldLang('Delete')}
+        confirmLabel={lang('Delete')}
         confirmHandler={handleDelete}
       />
     </div>

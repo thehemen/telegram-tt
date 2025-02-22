@@ -25,11 +25,7 @@ import {
   isMessageLocal, isUserId,
 } from '../../helpers';
 import { getMessageReplyInfo, getStoryReplyInfo } from '../../helpers/replies';
-import {
-  addActionHandler,
-  getGlobal,
-  setGlobal,
-} from '../../index';
+import { addActionHandler, getGlobal, setGlobal } from '../../index';
 import {
   addMessages,
   addViewportId,
@@ -663,15 +659,6 @@ addActionHandler('apiUpdate', (global, actions, update): ActionReturnType => {
       break;
     }
 
-    case 'deleteParticipantHistory': {
-      const { chatId, peerId } = update;
-
-      global = getGlobal();
-      deleteParticipantHistory(global, chatId, peerId, actions);
-
-      break;
-    }
-
     case 'updateCommonBoxMessages': {
       const { ids, messageUpdate } = update;
 
@@ -1092,25 +1079,6 @@ function findLastMessage<T extends GlobalState>(global: T, chatId: string, threa
   }
 
   return undefined;
-}
-
-export function deleteParticipantHistory<T extends GlobalState>(
-  global: T,
-  chatId: string,
-  peerId: string,
-  actions: RequiredGlobalActions,
-) {
-  const byId = selectChatMessages(global, chatId);
-
-  const messageIds = Object.values(byId).filter((message) => {
-    return message.senderId === peerId;
-  }).map((message) => message.id);
-
-  if (!messageIds.length) {
-    return;
-  }
-
-  deleteMessages(global, chatId, messageIds, actions);
 }
 
 export function deleteThread<T extends GlobalState>(

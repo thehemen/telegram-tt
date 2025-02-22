@@ -6,10 +6,10 @@ import { getActions, getGlobal, withGlobal } from '../../../global';
 import type { ApiChatMember } from '../../../api/types';
 
 import {
+  filterUsersByName,
   isUserBot,
   sortUserIds,
 } from '../../../global/helpers';
-import { filterPeersByQuery } from '../../../global/helpers/peers';
 import { selectChatFullInfo } from '../../../global/selectors';
 import { unique } from '../../../util/iteratees';
 import sortChatIds from '../../common/helpers/sortChatIds';
@@ -74,10 +74,9 @@ const GiveawayUserPickerModal = ({
 
   const displayedMemberIds = useMemo(() => {
     const usersById = getGlobal().users.byId;
-    const filteredUserIds = memberIds
-      ? filterPeersByQuery({ ids: memberIds, query: searchQuery, type: 'user' }) : [];
+    const filteredContactIds = memberIds ? filterUsersByName(memberIds, usersById, searchQuery) : [];
 
-    return sortChatIds(unique(filteredUserIds).filter((userId) => {
+    return sortChatIds(unique(filteredContactIds).filter((userId) => {
       const user = usersById[userId];
       if (!user) {
         return true;

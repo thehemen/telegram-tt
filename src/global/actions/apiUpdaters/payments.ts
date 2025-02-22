@@ -77,12 +77,12 @@ addActionHandler('apiUpdate', (global, actions, update): ActionReturnType => {
         const giftModalState = selectTabState(global, tabId).giftModal;
 
         if (giftModalState && inputInvoice.userIds[0] === giftModalState.forPeerId) {
-          actions.showNotification({
-            message: langProvider.oldTranslate('StarsGiftCompleted'),
-            tabId,
-          });
-          actions.requestConfetti({ withStars: true, tabId });
-          actions.closeGiftModal({ tabId });
+          global = updateTabState(global, {
+            giftModal: {
+              ...giftModalState,
+              isCompleted: true,
+            },
+          }, tabId);
         }
       }
 
@@ -100,25 +100,9 @@ addActionHandler('apiUpdate', (global, actions, update): ActionReturnType => {
             },
           }, tabId);
         }
+
+        actions.requestConfetti({ withStars: true, tabId });
       }
-
-      if (inputInvoice?.type === 'stargift') {
-        if (!inputInvoice.peerId) {
-          return;
-        }
-
-        const starGiftModalState = selectTabState(global, tabId).giftModal;
-
-        if (starGiftModalState && inputInvoice.peerId === starGiftModalState.forPeerId) {
-          actions.showNotification({
-            message: langProvider.oldTranslate('StarsGiftCompleted'),
-            tabId,
-          });
-          actions.requestConfetti({ withStars: true, tabId });
-          actions.closeGiftModal({ tabId });
-        }
-      }
-
       break;
     }
 

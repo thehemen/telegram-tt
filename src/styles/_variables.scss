@@ -202,6 +202,12 @@ $color-message-story-mention-to: #74bcff;
 
   --vh: 1vh;
 
+  --sidebar-bg: #1D2023;        /* Main sidebar background */
+  --sidebar-text: #808080;      /* Text color within sidebar */
+  --sidebar-hover-bg: #2B2F33;  /* Background on hover */
+  --sidebar-active-bg: #32363A; /* Background when the item is active */
+  --accent-color: #5597FF;      /* Badge color or accent color */
+
   --border-radius-modal: 1rem;
   --border-radius-default: 0.75rem;
   --border-radius-default-small: 0.625rem;

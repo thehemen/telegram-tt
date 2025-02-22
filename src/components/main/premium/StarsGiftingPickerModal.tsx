@@ -7,9 +7,8 @@ import { getActions, getGlobal, withGlobal } from '../../../global';
 
 import { SERVICE_NOTIFICATIONS_USER_ID } from '../../../config';
 import {
-  isDeletedUser, isUserBot,
+  filterUsersByName, isDeletedUser, isUserBot,
 } from '../../../global/helpers';
-import { filterPeersByQuery } from '../../../global/helpers/peers';
 import { unique } from '../../../util/iteratees';
 import sortChatIds from '../../common/helpers/sortChatIds';
 
@@ -47,17 +46,15 @@ const StarsGiftingPickerModal: FC<OwnProps & StateProps> = ({
 
   const displayedUserIds = useMemo(() => {
     const usersById = getGlobal().users.byId;
-    const combinedIds = unique([
+    const combinedIds = [
       ...(userIds || []),
       ...(activeListIds || []),
       ...(archivedListIds || []),
-    ]);
+    ];
 
-    const filteredUserIds = filterPeersByQuery({
-      ids: combinedIds, query: searchQuery, type: 'user',
-    });
+    const filteredContactIds = filterUsersByName(combinedIds, usersById, searchQuery);
 
-    return sortChatIds(filteredUserIds.filter((id) => {
+    return sortChatIds(unique(filteredContactIds).filter((id) => {
       const user = usersById[id];
 
       if (!user) {

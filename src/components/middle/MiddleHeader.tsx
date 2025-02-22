@@ -85,7 +85,6 @@ type StateProps = {
   isSyncing?: boolean;
   isFetchingDifference?: boolean;
   emojiStatusSticker?: ApiSticker;
-  emojiStatusSlug?: string;
 };
 
 const MiddleHeader: FC<OwnProps & StateProps> = ({
@@ -109,7 +108,6 @@ const MiddleHeader: FC<OwnProps & StateProps> = ({
   getCurrentPinnedIndex,
   getLoadingPinnedId,
   emojiStatusSticker,
-  emojiStatusSlug,
   isSavedDialog,
   onFocusPinnedMessage,
 }) => {
@@ -122,7 +120,6 @@ const MiddleHeader: FC<OwnProps & StateProps> = ({
     openPremiumModal,
     openStickerSet,
     updateMiddleSearch,
-    openUniqueGiftBySlug,
   } = getActions();
 
   const lang = useOldLang();
@@ -168,18 +165,10 @@ const MiddleHeader: FC<OwnProps & StateProps> = ({
   });
 
   const handleUserStatusClick = useLastCallback(() => {
-    if (emojiStatusSlug) {
-      openUniqueGiftBySlug({ slug: emojiStatusSlug });
-      return;
-    }
     openPremiumModal({ fromUserId: chatId });
   });
 
   const handleChannelStatusClick = useLastCallback(() => {
-    if (emojiStatusSlug) {
-      openUniqueGiftBySlug({ slug: emojiStatusSlug });
-      return;
-    }
     openStickerSet({
       stickerSetInfo: emojiStatusSticker!.stickerSetInfo,
     });
@@ -399,7 +388,6 @@ export default memo(withGlobal<OwnProps>(
 
     const emojiStatus = chat?.emojiStatus;
     const emojiStatusSticker = emojiStatus && global.customEmojis.byId[emojiStatus.documentId];
-    const emojiStatusSlug = emojiStatus?.type === 'collectible' ? emojiStatus.slug : undefined;
 
     const isSavedDialog = getIsSavedDialog(chatId, threadId, global.currentUserId);
 
@@ -418,7 +406,6 @@ export default memo(withGlobal<OwnProps>(
       isSyncing: global.isSyncing,
       isFetchingDifference: global.isFetchingDifference,
       emojiStatusSticker,
-      emojiStatusSlug,
       isSavedDialog,
     };
   },

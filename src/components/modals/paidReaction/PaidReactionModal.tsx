@@ -204,7 +204,7 @@ const PaidReactionModal = ({
         </div>
       )}
       <Checkbox
-        className="dialog-checkbox"
+        className={styles.checkbox}
         checked={shouldShowUp}
         onChange={handleAnonimityChange}
         label={oldLang('StarsReactionShowMeInTopSenders')}

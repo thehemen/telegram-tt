@@ -22,7 +22,6 @@ import Button from '../ui/Button';
 import Menu from '../ui/Menu';
 import MenuItem from '../ui/MenuItem';
 import Icon from './icons/Icon';
-import Sparkles from './Sparkles';
 import StickerView from './StickerView';
 
 import './StickerButton.scss';
@@ -55,7 +54,6 @@ type OwnProps<T> = {
   onContextMenuClose?: NoneToVoidFunction;
   onContextMenuClick?: NoneToVoidFunction;
   isEffectEmoji?: boolean;
-  withSparkles?: boolean;
 };
 
 const contentForStatusMenuContext = [
@@ -94,7 +92,6 @@ const StickerButton = <T extends number | ApiSticker | ApiBotInlineMediaResult |
   onContextMenuClose,
   onContextMenuClick,
   isEffectEmoji,
-  withSparkles,
 }: OwnProps<T>) => {
   const { openStickerSet, openPremiumModal, setEmojiStatus } = getActions();
   // eslint-disable-next-line no-null/no-null
@@ -201,7 +198,8 @@ const StickerButton = <T extends number | ApiSticker | ApiBotInlineMediaResult |
     handleContextMenuClose();
     onContextMenuClick?.();
     setEmojiStatus({
-      emojiStatus: { type: 'regular', documentId: sticker.id, until: getServerTime() + duration },
+      emojiStatusId: sticker.id,
+      expires: getServerTime() + duration,
     });
   });
 
@@ -291,7 +289,6 @@ const StickerButton = <T extends number | ApiSticker | ApiBotInlineMediaResult |
       onClick={handleClick}
       onContextMenu={handleContextMenu}
     >
-      {withSparkles && <Sparkles preset="button" /> }
       {isIntesectingForShowing && (
         <StickerView
           containerRef={ref}

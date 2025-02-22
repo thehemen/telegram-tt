@@ -54,7 +54,6 @@ const WebAppsCloseConfirmationModal: FC<OwnProps> = ({
     >
       <p>{lang('AreYouSureCloseMiniApps')}</p>
       <Checkbox
-        className="dialog-checkbox"
         label={lang('DoNotAskAgain')}
         checked={shouldSkipInFuture}
         onCheck={setShouldSkipInFuture}

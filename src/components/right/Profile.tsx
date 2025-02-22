@@ -49,7 +49,6 @@ import {
   selectChatMessages,
   selectCurrentSharedMediaSearch,
   selectIsCurrentUserPremium,
-  selectIsGiftProfileFilterDefault,
   selectIsRightColumnShown,
   selectPeerStories,
   selectSimilarBotsIds,
@@ -64,7 +63,6 @@ import { selectPremiumLimit } from '../../global/selectors/limits';
 import buildClassName from '../../util/buildClassName';
 import { captureEvents, SwipeDirection } from '../../util/captureEvents';
 import { IS_TOUCH_ENV } from '../../util/windowEnvironment';
-import { LOCAL_TGS_URLS } from '../common/helpers/animatedAssets';
 import renderText from '../common/helpers/renderText';
 import { getSenderName } from '../left/search/helpers/getSenderName';
 
@@ -81,7 +79,6 @@ import useProfileState from './hooks/useProfileState';
 import useProfileViewportIds from './hooks/useProfileViewportIds';
 import useTransitionFixes from './hooks/useTransitionFixes';
 
-import AnimatedIconWithPreview from '../common/AnimatedIconWithPreview';
 import Audio from '../common/Audio';
 import Document from '../common/Document';
 import SavedGift from '../common/gift/SavedGift';
@@ -99,7 +96,6 @@ import MediaStory from '../story/MediaStory';
 import Button from '../ui/Button';
 import FloatingActionButton from '../ui/FloatingActionButton';
 import InfiniteScroll from '../ui/InfiniteScroll';
-import Link from '../ui/Link';
 import ListItem, { type MenuItemContextAction } from '../ui/ListItem';
 import Spinner from '../ui/Spinner';
 import TabList from '../ui/TabList';
@@ -114,7 +110,6 @@ type OwnProps = {
   profileState: ProfileState;
   isMobile?: boolean;
   onProfileStateChange: (state: ProfileState) => void;
-  isActive: boolean;
 };
 
 type StateProps = {
@@ -131,7 +126,6 @@ type StateProps = {
   hasPreviewMediaTab?: boolean;
   hasGiftsTab?: boolean;
   gifts?: ApiSavedStarGift[];
-  giftsTransitionKey: number;
   areMembersHidden?: boolean;
   canAddMembers?: boolean;
   canDeleteMembers?: boolean;
@@ -160,7 +154,6 @@ type StateProps = {
   isSavedDialog?: boolean;
   forceScrollProfileTab?: boolean;
   isSynced?: boolean;
-  isNotDefaultGiftFilter?: boolean;
 };
 
 type TabProps = {
@@ -180,7 +173,6 @@ const INTERSECTION_THROTTLE = 500;
 
 const Profile: FC<OwnProps & StateProps> = ({
   chatId,
-  isActive,
   threadId,
   profileState,
   theme,
@@ -200,7 +192,6 @@ const Profile: FC<OwnProps & StateProps> = ({
   hasPreviewMediaTab,
   hasGiftsTab,
   gifts,
-  giftsTransitionKey,
   botPreviewMedia,
   areMembersHidden,
   canAddMembers,
@@ -226,7 +217,6 @@ const Profile: FC<OwnProps & StateProps> = ({
   forceScrollProfileTab,
   isSynced,
   onProfileStateChange,
-  isNotDefaultGiftFilter,
 }) => {
   const {
     setSharedMediaSearchType,
@@ -245,7 +235,6 @@ const Profile: FC<OwnProps & StateProps> = ({
     loadBotRecommendations,
     loadPreviewMedias,
     loadPeerSavedGifts,
-    resetGiftProfileFilter,
   } = getActions();
 
   // eslint-disable-next-line no-null/no-null
@@ -372,8 +361,8 @@ const Profile: FC<OwnProps & StateProps> = ({
     loadPeerProfileStories({ peerId: chatId, offsetId });
   }, [chatId]);
   const handleLoadStoriesArchive = useCallback(({ offsetId }: { offsetId: number }) => {
-    loadStoriesArchive({ peerId: chatId, offsetId });
-  }, [chatId]);
+    loadStoriesArchive({ peerId: currentUserId!, offsetId });
+  }, [currentUserId]);
   const handleLoadGifts = useCallback(() => {
     loadPeerSavedGifts({ peerId: chatId });
   }, [chatId]);
@@ -491,10 +480,6 @@ const Profile: FC<OwnProps & StateProps> = ({
     setActiveTab(Math.min(newActiveTab, tabs.length - 1));
   }, [hasMembersTab, activeTab, tabs]);
 
-  const handleResetGiftsFilter = useLastCallback(() => {
-    resetGiftProfileFilter({ peerId: chatId });
-  });
-
   useEffect(() => {
     if (!transitionRef.current || !IS_TOUCH_ENV) {
       return undefined;
@@ -536,28 +521,6 @@ const Profile: FC<OwnProps & StateProps> = ({
     }];
   }
 
-  function renderNothingFoundGiftsWithFilter() {
-    return (
-      <div className="nothing-found-gifts">
-        <AnimatedIconWithPreview
-          size={160}
-          tgsUrl={LOCAL_TGS_URLS.SearchingDuck}
-          nonInteractive
-          noLoop
-        />
-        <div className="description">
-          {lang('GiftSearchEmpty')}
-        </div>
-        <Link
-          className="date"
-          onClick={handleResetGiftsFilter}
-        >
-          {lang('GiftSearchReset')}
-        </Link>
-      </div>
-    );
-  }
-
   function renderContent() {
     if (resultType === 'dialogs') {
       return (
@@ -570,9 +533,7 @@ const Profile: FC<OwnProps & StateProps> = ({
       const forceRenderHiddenMembers = Boolean(resultType === 'members' && areMembersHidden);
 
       return (
-        <div
-          className="content empty-list"
-        >
+        <div className="content empty-list">
           {!noSpinner && !forceRenderHiddenMembers && <Spinner />}
           {forceRenderHiddenMembers && <NothingFound text="You have no access to group members list." />}
         </div>
@@ -581,10 +542,6 @@ const Profile: FC<OwnProps & StateProps> = ({
 
     if (viewportIds && !viewportIds?.length) {
       let text: string;
-
-      if (resultType === 'gifts' && isNotDefaultGiftFilter) {
-        return renderNothingFoundGiftsWithFilter();
-      }
 
       switch (resultType) {
         case 'members':
@@ -829,20 +786,6 @@ const Profile: FC<OwnProps & StateProps> = ({
     );
   }
 
-  const shouldUseTransitionForContent = resultType === 'gifts';
-  const contentTransitionKey = giftsTransitionKey;
-
-  function renderContentWithTransition() {
-    return (
-      <Transition
-        activeKey={contentTransitionKey}
-        name="fade"
-      >
-        {renderContent()}
-      </Transition>
-    );
-  }
-
   return (
     <InfiniteScroll
       ref={containerRef}
@@ -875,7 +818,7 @@ const Profile: FC<OwnProps & StateProps> = ({
             onStart={applyTransitionFix}
             onStop={handleTransitionStop}
           >
-            {shouldUseTransitionForContent ? renderContentWithTransition() : renderContent()}
+            {renderContent()}
           </Transition>
           <TabList activeTab={renderingActiveTab} tabs={tabs} onSwitchTab={handleSwitchTab} />
         </div>
@@ -883,8 +826,7 @@ const Profile: FC<OwnProps & StateProps> = ({
 
       {canAddMembers && (
         <FloatingActionButton
-          className={buildClassName(!isActive && 'hidden')}
-          isShown={canRenderContent}
+          isShown={resultType === 'members'}
           onClick={handleNewMemberDialogOpen}
           ariaLabel={oldLang('lng_channel_add_users')}
         >
@@ -967,10 +909,7 @@ export default memo(withGlobal<OwnProps>(
     const archiveStoryIds = peerStories?.archiveIds;
 
     const hasGiftsTab = Boolean(peerFullInfo?.starGiftCount) && !isSavedDialog;
-    const peerGifts = selectTabState(global).savedGifts.giftsByPeerId[chatId];
-    const giftsTransitionKey = selectTabState(global).savedGifts.transitionKey || 0;
-
-    const isNotDefaultGiftFilter = !selectIsGiftProfileFilterDefault(global);
+    const peerGifts = global.peers.giftsById[chatId];
 
     return {
       theme: selectTheme(global),
@@ -996,7 +935,6 @@ export default memo(withGlobal<OwnProps>(
       storyIds,
       hasGiftsTab,
       gifts: peerGifts?.gifts,
-      giftsTransitionKey,
       pinnedStoryIds,
       archiveStoryIds,
       storyByIds,
@@ -1011,7 +949,6 @@ export default memo(withGlobal<OwnProps>(
       isTopicInfo,
       isSavedDialog,
       isSynced: global.isSynced,
-      isNotDefaultGiftFilter,
       limitSimilarPeers: selectPremiumLimit(global, 'recommendedChannels'),
       ...(hasMembersTab && members && { members, adminMembersById }),
       ...(hasCommonChatsTab && user && { commonChatIds: commonChats?.ids }),

@@ -69,7 +69,7 @@
 
   .chat-info-wrapper {
     flex-grow: 1;
-    min-width: 0;
+    overflow: hidden;
   }
 
   .header-tools {
@@ -154,7 +154,7 @@
       flex-direction: column;
       justify-content: center;
       flex-grow: 1;
-      min-width: 0;
+      overflow: hidden;
     }
 
     .title {

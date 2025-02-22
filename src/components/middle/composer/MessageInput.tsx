@@ -96,6 +96,20 @@ const IGNORE_KEYS = [
   'Esc', 'Escape', 'Enter', 'PageUp', 'PageDown', 'Meta', 'Alt', 'Ctrl', 'ArrowDown', 'ArrowUp', 'Control', 'Shift',
 ];
 
+// Define the type for a snapshot of the editor.
+type EditorState = {
+  text: string;              // The innerHTML (or plain text) of the editor.
+  action: 'empty' | 'backspace' | 'delete' | 'character';
+  selectionStart: number;    // Caret start offset.
+  selectionEnd: number;      // Caret end offset.
+};
+
+// History stacks are stored in refs.
+let undoStackRef = useRef<EditorState[]>([]);
+let redoStackRef = useRef<EditorState[]>([]);
+
+let savedEvent = '';
+
 function clearSelection() {
   const selection = window.getSelection();
   if (!selection) {
@@ -279,6 +293,122 @@ const MessageInput: FC<OwnProps & StateProps> = ({
     clearSelection();
   });
 
+  // Gets the current caret (selection) position in the editable element.
+  function getCaretPosition(editableDiv: HTMLDivElement): { start: number; end: number } {
+    let start = 0, end = 0;
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0 && editableDiv.contains(selection.anchorNode)) {
+      const range = selection.getRangeAt(0);
+      // Create a range that spans from the start of the content to the caret.
+      const preRange = range.cloneRange();
+      preRange.selectNodeContents(editableDiv);
+      preRange.setEnd(range.startContainer, range.startOffset);
+      start = preRange.toString().length;
+      end = start + range.toString().length;
+    }
+    return { start, end };
+  }
+
+  // Restores the caret position given start/end offsets.
+  // This simplistic implementation walks through the text nodes to find the offsets.
+  function restoreSelection(editableDiv: HTMLDivElement, start: number, end: number): void {
+    let charIndex = 0;
+    const range = document.createRange();
+    range.selectNodeContents(editableDiv);
+    let foundStart = false, foundEnd = false;
+
+    function traverseNodes(node: Node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const textLength = node.textContent ? node.textContent.length : 0;
+        if (!foundStart && charIndex + textLength >= start) {
+          range.setStart(node, start - charIndex);
+          foundStart = true;
+        }
+        if (foundStart && !foundEnd && charIndex + textLength >= end) {
+          range.setEnd(node, end - charIndex);
+          foundEnd = true;
+          return;
+        }
+        charIndex += textLength;
+      } else {
+        for (let i = 0; i < node.childNodes.length; i++) {
+          traverseNodes(node.childNodes[i]);
+          if (foundEnd) break;
+        }
+      }
+    }
+    traverseNodes(editableDiv);
+
+    const sel = window.getSelection();
+    if (sel) {
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  }
+
+  // Call recordState() whenever the content changes (for example, in your onInput/handleChange).
+  function recordState(text: string, action: 'backspace' | 'delete' | 'space' | 'character') {
+    const { start, end } = getCaretPosition(inputRef.current);
+
+    if (!undoStackRef.current) {
+        undoStackRef.current = [];
+    }
+    if (!redoStackRef.current) {
+        redoStackRef.current = [];
+    }
+
+    let lastState = undoStackRef.current[undoStackRef.current.length - 1];
+    let updatedAction = action;
+
+    if (action === 'space') {
+      updatedAction = 'character';
+    }
+
+    const state: EditorState = { text: text, action: updatedAction, selectionStart: start, selectionEnd: end };
+
+    if (!lastState || action === 'space' || lastState.action !== updatedAction && lastState.text !== text) {
+      if(!lastState && action === 'character') {
+        lastState = { text: '', action: 'empty', selectionStart: 0, selectionEnd: 1 };
+        undoStackRef.current.push(lastState);
+      }
+
+      // Add the new state.
+      undoStackRef.current.push(state);
+      // Clear the redo history when new changes occur.
+      redoStackRef.current = [];
+    }
+    else if (lastState && lastState.action === updatedAction && lastState.text !== text) {
+      // Update the current state.
+      undoStackRef.current[undoStackRef.current.length - 1] = state;
+      // Clear the redo history when new changes occur.
+      redoStackRef.current = [];
+    }
+  }
+
+  function performUndo() {
+    // Make sure there is a previous state.
+    if (undoStackRef.current.length > 0 && inputRef.current) {
+      // The new current state is the last item in the undo stack.
+      const currentState = undoStackRef.current.pop()!;
+      inputRef.current.innerHTML = currentState.text;
+      onUpdate(currentState.text);
+      // Remove the current state and add it to the redo stack.
+      redoStackRef.current.push(currentState);
+      // Restore the caret to where it was in the previous state.
+      restoreSelection(inputRef.current, currentState.selectionStart, currentState.selectionEnd);
+    }
+  }
+
+  function performRedo() {
+    if (redoStackRef.current.length > 0 && inputRef.current) {
+      const nextState = redoStackRef.current.pop()!;
+      undoStackRef.current.push(nextState);
+      inputRef.current.innerHTML = nextState.text;
+      onUpdate(nextState.text);
+      restoreSelection(inputRef.current, nextState.selectionStart, nextState.selectionEnd);
+    }
+  }
+
   function checkSelection() {
     // Disable the formatter on iOS devices for now.
     if (IS_IOS) {
@@ -383,6 +513,35 @@ const MessageInput: FC<OwnProps & StateProps> = ({
     // https://levelup.gitconnected.com/javascript-events-handlers-keyboard-and-load-events-1b3e46a6b0c3#1960
     const { isComposing } = e;
 
+    // Check for Undo: Ctrl+Z or Cmd+Z
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      performUndo();
+      return;
+    }
+
+    // Check for Redo:
+    // On Windows/Linux, often Ctrl+Y is used; on macOS, sometimes Ctrl+Shift+Z or Cmd+Shift+Z.
+    if ((e.ctrlKey || e.metaKey) && (
+        (e.key.toLowerCase() === 'y') ||
+        (e.shiftKey && e.key.toLowerCase() === 'z')
+      )) {
+      e.preventDefault();
+      performRedo();
+      return;
+    }
+
+    // Check for backspace, delete, space, and printable characters
+    if (e.key === 'Backspace') {
+      savedEvent = 'backspace';
+    } else if (e.key === 'Delete') {
+      savedEvent = 'delete';
+    } else if (e.key === ' ') {
+      savedEvent = 'space';
+    } else if (e.key.length === 1) {
+      savedEvent = 'character';
+    }
+
     const html = getHtml();
     if (!isComposing && !html && (e.metaKey || e.ctrlKey)) {
       const targetIndexDelta = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : undefined;
@@ -419,6 +578,11 @@ const MessageInput: FC<OwnProps & StateProps> = ({
     const { innerHTML, textContent } = e.currentTarget;
 
     onUpdate(innerHTML === SAFARI_BR ? '' : innerHTML);
+
+    if(savedEvent.length !== 0) {
+      const html = getHtml();
+      recordState(html, savedEvent);
+    }
 
     // Reset focus on the input to remove any active styling when input is cleared
     if (

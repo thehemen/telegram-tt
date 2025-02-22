@@ -18,6 +18,7 @@ import useLastCallback from '../../../hooks/useLastCallback';
 import useOldLang from '../../../hooks/useOldLang';
 
 import Icon from '../../common/icons/Icon';
+import StarIcon from '../../common/icons/StarIcon';
 import SafeLink from '../../common/SafeLink';
 import Button from '../../ui/Button';
 import InfiniteScroll from '../../ui/InfiniteScroll';
@@ -50,11 +51,10 @@ export type OwnProps = {
 type StateProps = {
   starsBalanceState?: GlobalState['stars'];
   canBuyPremium?: boolean;
-  shouldForceHeight?: boolean;
 };
 
 const StarsBalanceModal = ({
-  modal, starsBalanceState, canBuyPremium, shouldForceHeight,
+  modal, starsBalanceState, canBuyPremium,
 }: OwnProps & StateProps) => {
   const {
     closeStarsBalanceModal, loadStarsTransactions, loadStarsSubscriptions, openStarsGiftingPickerModal, openInvoice,
@@ -179,11 +179,7 @@ const StarsBalanceModal = ({
   });
 
   return (
-    <Modal
-      className={buildClassName(styles.root, !shouldForceHeight && styles.minimal)}
-      isOpen={isOpen}
-      onClose={closeStarsBalanceModal}
-    >
+    <Modal className={styles.root} isOpen={isOpen} onClose={closeStarsBalanceModal}>
       <div className={buildClassName(styles.main, 'custom-scroll')} onScroll={handleScroll}>
         <Button
           round
@@ -224,11 +220,11 @@ const StarsBalanceModal = ({
           )}
           {canBuyPremium && !areBuyOptionsShown && shouldSuggestGifting && (
             <Button
-              isText
-              noForcedUpperCase
-              className={styles.starButton}
+              className={buildClassName(styles.starButton, 'settings-main-menu-star')}
+              color="translucent"
               onClick={openStarsGiftingPickerModalHandler}
             >
+              <StarIcon className="icon" type="gold" size="big" />
               {oldLang('TelegramStarsGift')}
             </Button>
           )}
@@ -315,10 +311,7 @@ const StarsBalanceModal = ({
 
 export default memo(withGlobal<OwnProps>(
   (global): StateProps => {
-    const shouldForceHeight = Boolean(global.stars?.history?.all?.transactions.length);
-
     return {
-      shouldForceHeight,
       starsBalanceState: global.stars,
       canBuyPremium: !selectIsPremiumPurchaseBlocked(global),
     };
